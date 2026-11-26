@@ -255,8 +255,8 @@ footer{padding:24px 0 40px;color:var(--tenue);font-size:.85rem;border-top:1px so
 <div id="toast" role="status" aria-live="polite"></div>
 <dialog id="dlg" aria-labelledby="dlgTitulo"></dialog>
 <script>
-const SB_URL = "__SB_URL__";
-const SB_KEY = "__SB_KEY__";
+const SB_URL = "https://gwgdlfjpigsbrkctuxzp.supabase.co";
+const SB_KEY = "sb_publishable_B4V1l83FGM3J6_yJ9PTaBQ_WkaWoMXB";
 
 const I = {
   regalo:'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/>',
@@ -337,11 +337,18 @@ $('#dlg').addEventListener('click', e => { if (e.target.id === 'dlg') e.target.c
 
 function confirmar({titulo, texto, si = 'Sí, continuar', tipo = 'prim'}) {
   return new Promise(res => {
-    let r = false;
+    let hecho = false;
+    const fin = v => { if (hecho) return; hecho = true; d.removeEventListener('click', fuera); d.removeEventListener('cancel', esc_); res(v); };
+    const fuera = e => { if (e.target === d) fin(false); };
+    const esc_ = () => fin(false);
     const d = abrirDialogo(`<h2 id="dlgTitulo">${esc(titulo)}</h2><p class="texto">${texto}</p>
       <div class="pie"><button class="btn sec" data-cerrar title="Cerrar sin hacer nada">Cancelar</button><button class="btn ${tipo}" id="dlgSi">${esc(si)}</button></div>`,
-      d => d.querySelector('#dlgSi').addEventListener('click', () => { r = true; d.close(); }));
-    d.addEventListener('close', () => res(r), {once: true});
+      d => {
+        d.querySelector('#dlgSi').addEventListener('click', () => { d.close(); fin(true); });
+        d.querySelector('[data-cerrar]').addEventListener('click', () => fin(false));
+      });
+    d.addEventListener('click', fuera);
+    d.addEventListener('cancel', esc_);
   });
 }
 

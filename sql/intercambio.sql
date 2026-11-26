@@ -102,7 +102,7 @@ begin
   if exists (select 1 from public.participantes where codigo = c) then
     return json_build_object('tipo', 'participante', 'codigo', c);
   end if;
-  raise exception 'No encontramos ese código. Revíselo letra por letra.' using errcode = 'P0001';
+  raise exception 'No encontramos ese código. Revísalo letra por letra.' using errcode = 'P0001';
 end
 $$;
 
@@ -117,7 +117,7 @@ declare
   intento int := 0;
 begin
   if ir_limpio(p_nombre) is null then
-    raise exception 'Escriba el nombre del intercambio' using errcode = 'P0001';
+    raise exception 'Escribe el nombre del intercambio' using errcode = 'P0001';
   end if;
   loop
     begin
@@ -170,7 +170,7 @@ declare
   v public.intercambios := ir_admin(p_codigo);
 begin
   if ir_limpio(p_nombre) is null then
-    raise exception 'Escriba el nombre del intercambio' using errcode = 'P0001';
+    raise exception 'Escribe el nombre del intercambio' using errcode = 'P0001';
   end if;
   update public.intercambios
   set nombre = ir_limpio(p_nombre), presupuesto = coalesce(p_presupuesto, presupuesto), fecha = p_fecha,
@@ -236,7 +236,7 @@ declare
   limpio text := ir_limpio(p_nombre);
 begin
   if limpio is null then
-    raise exception 'Escriba el nombre' using errcode = 'P0001';
+    raise exception 'Escribe el nombre' using errcode = 'P0001';
   end if;
   if exists (select 1 from public.participantes where intercambio_id = v.id and lower(nombre) = lower(limpio) and id <> p_id) then
     raise exception 'Ya hay alguien que se llama «%»', limpio using errcode = 'P0001';
@@ -350,7 +350,7 @@ declare
 begin
   select * into yo from public.participantes where codigo = upper(btrim(coalesce(p_codigo, '')));
   if not found then
-    raise exception 'No encontramos ese código. Revíselo letra por letra.' using errcode = 'P0001';
+    raise exception 'No encontramos ese código. Revísalo letra por letra.' using errcode = 'P0001';
   end if;
   select * into v from public.intercambios where id = yo.intercambio_id;
   if yo.regala_a is not null then
