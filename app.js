@@ -287,33 +287,19 @@ function pintarInicio() {
     <section class="portada">
       ${rama('r1')}
       <div>
-        <p class="eyebrow">${estrella()} Convivios y celebraciones</p>
-        <h1>Su convivio, <em>organizado</em> de principio a fin.</h1>
+        <p class="eyebrow">${estrella()} Intercambio y más</p>
+        <h1>Nuestro <em>convivio</em></h1>
         ${adorno('corto')}
-        <p class="bajada">Intercambio de regalos, asistencia, alimentos, rifa y fotografías en un solo lugar. Cada invitado ingresa con su código personal.</p>
-        <div class="actividades-mini">
-          ${['regalo:Intercambio', 'check:Asistencia', 'comida:Alimentos', 'boleto:Rifa', 'trofeo:Votaciones', 'camara:Fotografías'].map(x => { const [i, n] = x.split(':'); return `<span>${ic(i, 's')}${n}</span>`; }).join('')}
-        </div>
+        <button class="btn crear" data-acc="ir-crear" title="Crear un convivio nuevo">${ic('mas')}Crear un convivio</button>
       </div>
       <form class="panel entrar" data-form="entrar" autocomplete="off">
-        <p class="eyebrow">${estrella()} Invitados</p>
-        <h2 style="margin-top:10px">Ingresar con su código</h2>
-        <p class="sub">El organizador se lo envía por WhatsApp.</p>
+        <h2>Ingresar con su código</h2>
         <div class="campo">
           <label for="cod">Código personal</label>
           <input id="cod" class="codigo-in" autocapitalize="characters" autocorrect="off" spellcheck="false" maxlength="12" placeholder="K7MP2Q">
-          <p class="ayuda">Puede escribirlo en mayúsculas o minúsculas.</p>
         </div>
         <button class="btn prim ancho" type="submit" title="Ingresar al convivio con este código (Enter)">${ic('llave')}Ingresar</button>
       </form>
-    </section>
-    <section class="organiza">
-      <div>
-        <p class="eyebrow">${estrella()} Organizadores</p>
-        <h2 style="margin-top:10px">Para quien organiza</h2>
-        <p>Defina los colores y las actividades: intercambio, asistencia, alimentos, cooperación, programa, rifa, votaciones y fotografías. Recibirá un código de organizador para administrarlo.</p>
-      </div>
-      <button class="btn" data-acc="ir-crear" title="Crear un convivio nuevo">${ic('mas')}Crear un convivio</button>
     </section>
     ${rec.length ? `<section class="recientes">${adorno()}<p class="eyebrow" style="margin-bottom:14px">Continuar en este equipo</p><div class="chips">${rec.map(r => `<button class="chip" data-acc="reciente" data-cod="${esc(r.codigo)}" title="Abrir ${esc(r.nombre)} ${r.tipo === 'organizador' ? 'como organizador' : 'como ' + esc(r.quien || 'invitado')}">${ic(r.tipo === 'organizador' ? 'llave' : 'regalo', 's')}${esc(r.nombre)}<small>${r.tipo === 'organizador' ? 'organizador' : esc(r.quien || '')}</small></button>`).join('')}</div></section>` : ''}
   </div>`;

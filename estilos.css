@@ -135,6 +135,7 @@ input::placeholder,textarea::placeholder{color:color-mix(in oklab,var(--tenue) 6
 .portada h1 em{font-style:italic;color:var(--acento)}
 .portada .bajada{font-size:1.12rem;color:var(--tenue);max-width:36ch;margin-top:22px}
 .portada .eyebrow{margin-bottom:18px}
+.portada .crear{margin-top:30px}
 .rama{position:absolute;pointer-events:none;color:var(--primario);opacity:.9}
 .rama .aguja{stroke:currentColor;stroke-width:1.6;stroke-linecap:round;fill:none}
 .rama .tallo{stroke:color-mix(in oklab,var(--primario) 70%,#6B4A2A);stroke-width:2.4;fill:none;stroke-linecap:round}
