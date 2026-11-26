@@ -15,6 +15,7 @@ const ACTIVIDADES = [
   {k: 'asistencia', n: 'Confirmar asistencia', d: 'Cada invitado confirma si asiste y con cuántos acompañantes.', i: 'check'},
   {k: 'intercambio', n: 'Intercambio de regalos', d: 'Sorteo confidencial, lista de deseos y presupuesto.', i: 'regalo'},
   {k: 'llevar', n: 'Quién lleva qué', d: 'Alimentos, bebidas y artículos; cada invitado se inscribe.', i: 'comida'},
+  {k: 'restaurante', n: 'En restaurante', d: 'Precio promedio por plato, para que cada invitado lo tenga presente.', i: 'plato'},
   {k: 'cuota_act', n: 'Cooperación', d: 'Monto por persona y control de pagos.', i: 'billete'},
   {k: 'programa', n: 'Programa del día', d: 'Horario de las actividades.', i: 'reloj'},
   {k: 'rifa', n: 'Rifa', d: 'Premios sorteados entre los asistentes.', i: 'boleto'},
@@ -57,7 +58,8 @@ const I = {
   arriba: '<path d="m18 15-6-6-6 6"/>',
   abajo: '<path d="m6 9 6 6 6-6"/>',
   ojo: '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
-  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  plato: '<path d="m16 2-2.3 2.3a3 3 0 0 0 0 4.2l1.8 1.8a3 3 0 0 0 4.2 0L22 8"/><path d="M15 15 3.3 3.3a4.2 4.2 0 0 0 0 6l7.3 7.3c.7.7 2 .7 2.8 0L15 15Zm0 0 7 7"/><path d="m2.1 21.8 6.4-6.3"/><path d="m19 5-7 7"/>'
 };
 const ESTRELLA = '<path d="M12 1.5 13.9 10.1 22.5 12 13.9 13.9 12 22.5 10.1 13.9 1.5 12 10.1 10.1Z"/>';
 const ic = (n, c = '') => `<svg class="svg ${c}" viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
@@ -223,7 +225,7 @@ const urlFoto = ruta => `${SB_URL}/storage/v1/object/public/${BUCKET}/${ruta.spl
 const primerNombre = n => String(n || '').split(' ')[0];
 
 function mensajeWhats(p, conv) {
-  return `Estimado(a) ${p.nombre}:\n\nLe invitamos a «${conv.nombre}».${conv.fecha ? `\n${fechaLarga(conv.fecha)}` : ''}${conv.lugar ? `\n${conv.lugar}` : ''}\n\nSu código personal es: ${p.codigo}\n\nIngrese aquí para confirmar su asistencia y consultar los detalles:\n${enlaceBase()}#c=${p.codigo}${p.es_organizador ? '\n\nCon este mismo código también puede administrar el convivio como organizador.' : ''}\n\nEl código es personal; le rogamos no compartirlo.`;
+  return `Estimado(a) ${p.nombre}:\n\nLe invitamos a «${conv.nombre}».${conv.fecha ? `\n${fechaLarga(conv.fecha)}` : ''}${conv.lugar ? `\n${conv.lugar}` : ''}${conv.act.restaurante && conv.precio_plato ? `\nPrecio promedio por plato: ${quetzales(conv.precio_plato)}` : ''}\n\nSu código personal es: ${p.codigo}\n\nIngrese aquí para confirmar su asistencia y consultar los detalles:\n${enlaceBase()}#c=${p.codigo}${p.es_organizador ? '\n\nCon este mismo código también puede administrar el convivio como organizador.' : ''}\n\nEl código es personal; le rogamos no compartirlo.`;
 }
 
 function guardarReciente(r) {
@@ -340,6 +342,7 @@ function formConvivio(v = {}) {
       </div>
       <div class="dos extra">
         <div class="campo" id="campoPresu" ${act.intercambio ? '' : 'hidden'}><label for="cPresu">Presupuesto del regalo</label><div class="prefijo"><span>Q</span><input id="cPresu" type="number" inputmode="decimal" min="1" step="0.01" value="${esc(v.presupuesto ?? 100)}"></div></div>
+        <div class="campo" id="campoPlato" ${act.restaurante ? '' : 'hidden'}><label for="cPlato">Precio promedio por plato</label><div class="prefijo"><span>Q</span><input id="cPlato" type="number" inputmode="decimal" min="1" step="0.01" placeholder="120" value="${esc(v.precio_plato ?? '')}"></div></div>
         <div class="campo" id="campoCuota" ${act.cuota ? '' : 'hidden'}><label for="cCuota">Cooperación por persona</label><div class="prefijo"><span>Q</span><input id="cCuota" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(v.cuota && Number(v.cuota) > 0 ? v.cuota : 50)}"></div></div>
       </div>
     </section>`;
@@ -359,6 +362,7 @@ function leerConvivio() {
   ACTIVIDADES.forEach(a => { d[a.k] = acts.has(a.k); });
   const p = n('#cPresu'); if (p && p > 0) d.presupuesto = String(p);
   const c = n('#cCuota'); if (c !== null) d.cuota = String(acts.has('cuota_act') ? c : 0);
+  const pl = n('#cPlato'); d.precio_plato = acts.has('restaurante') && pl > 0 ? String(pl) : '';
   return d;
 }
 function marcarTema() {
@@ -440,6 +444,7 @@ function pintarEncabezado() {
           ${c.fecha ? `<span>${ic('fecha', 's')}${esc(fechaLarga(c.fecha))}</span>` : ''}
           ${c.lugar ? `<span>${ic('lugar', 's')}${esc(c.lugar)}</span>` : ''}
           ${c.act.intercambio ? `<span>${ic('regalo', 's')}Regalo de ${quetzales(c.presupuesto)}</span>` : ''}
+          ${c.act.restaurante && c.precio_plato ? `<span title="Precio promedio por plato en el restaurante">${ic('plato', 's')}Plato promedio ${quetzales(c.precio_plato)}</span>` : ''}
         </div>
       </div>
       <div id="cuentaEnc"></div>
@@ -1128,7 +1133,8 @@ app.addEventListener('change', async e => {
   const t = e.target, k = t.dataset.cambio;
   if (k === 'act') {
     const acts = new Set([...document.querySelectorAll('input[name=act]:checked')].map(x => x.value));
-    const p = $('#campoPresu'), c = $('#campoCuota');
+    const p = $('#campoPresu'), c = $('#campoCuota'), pl = $('#campoPlato');
+    if (pl) pl.hidden = !acts.has('restaurante');
     if (p) p.hidden = !acts.has('intercambio');
     if (c) c.hidden = !acts.has('cuota_act');
     pintarVistaPrevia();

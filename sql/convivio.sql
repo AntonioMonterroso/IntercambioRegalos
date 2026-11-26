@@ -111,6 +111,8 @@ create table if not exists public.fotos (
 );
 create index if not exists fotos_convivio on public.fotos (convivio_id, creado_en desc);
 
+alter table public.convivios add column if not exists act_restaurante boolean not null default false;
+alter table public.convivios add column if not exists precio_plato numeric(10,2) check (precio_plato is null or (precio_plato > 0 and precio_plato < 100000));
 alter table public.invitados add column if not exists es_organizador boolean not null default false;
 alter table public.llevar_apuntes add column if not exists asignado boolean not null default false;
 
@@ -239,11 +241,12 @@ set search_path = public
 as $$
   select json_build_object(
     'id', v.id, 'nombre', v.nombre, 'fecha', v.fecha, 'lugar', v.lugar, 'nota', v.nota,
-    'tema', v.tema, 'color', v.color, 'presupuesto', v.presupuesto, 'cuota', v.cuota,
+    'tema', v.tema, 'color', v.color, 'presupuesto', v.presupuesto, 'cuota', v.cuota, 'precio_plato', v.precio_plato,
     'sorteado', v.sorteado_en is not null, 'sorteado_en', v.sorteado_en,
     'act', json_build_object(
       'asistencia', v.act_asistencia, 'intercambio', v.act_intercambio, 'llevar', v.act_llevar,
-      'cuota', v.act_cuota, 'programa', v.act_programa, 'rifa', v.act_rifa, 'votos', v.act_votos, 'fotos', v.act_fotos
+      'cuota', v.act_cuota, 'programa', v.act_programa, 'rifa', v.act_rifa, 'votos', v.act_votos, 'fotos', v.act_fotos,
+      'restaurante', v.act_restaurante
     )
   )
 $$;
@@ -323,6 +326,8 @@ begin
     act_rifa = coalesce((d->>'rifa')::boolean, act_rifa),
     act_votos = coalesce((d->>'votos')::boolean, act_votos),
     act_fotos = coalesce((d->>'fotos')::boolean, act_fotos),
+    act_restaurante = coalesce((d->>'restaurante')::boolean, act_restaurante),
+    precio_plato = case when d ? 'precio_plato' then nullif(nullif(d->>'precio_plato', '')::numeric, 0) else precio_plato end,
     presupuesto = coalesce(nullif(d->>'presupuesto', '')::numeric, presupuesto),
     cuota = coalesce(nullif(d->>'cuota', '')::numeric, cuota)
   where id = p_id;
