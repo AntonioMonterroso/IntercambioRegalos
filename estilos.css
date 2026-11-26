@@ -73,6 +73,7 @@ button{font-family:inherit}
 .marca .sello{position:relative;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--primario);color:var(--sobre-p);box-shadow:0 0 0 3px var(--fondo),0 0 0 4px var(--filete)}
 .marca b{font-family:var(--t-display);font-weight:600;font-size:1.35rem;letter-spacing:-.01em}
 .marca small{display:block;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--oro);font-weight:700;margin-top:-2px}
+#sesion .corto{display:none}
 #sesion{display:flex;align-items:center;gap:6px;min-width:0}
 #sesion .quien{font-size:.85rem;color:var(--tenue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38vw}
 main{padding:12px 0 72px}
@@ -282,6 +283,17 @@ button.insignia:active{transform:scale(.97)}
 .cosa .quienes{font-size:.83rem;color:var(--tenue);margin-top:3px}
 .cosa.completa{background:var(--suave-p)}
 .cosa.mia{border-color:color-mix(in oklab,var(--primario) 45%,var(--linea))}
+.asignados{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.asignados .insignia{padding-right:3px}
+.quitar-chip{appearance:none;border:0;background:transparent;color:inherit;width:28px;height:28px;margin:-4px 0;border-radius:50%;display:inline-grid;place-items:center;cursor:pointer;opacity:.7;transition:opacity .16s var(--ease-out),background-color .16s var(--ease-out),transform .12s var(--ease-out)}
+.quitar-chip:active{transform:scale(.97)}
+.quitar-chip:focus-visible{outline:3px solid var(--oro-brillo);outline-offset:1px;opacity:1}
+@media (hover:hover) and (pointer:fine){.quitar-chip:hover{opacity:1;background:color-mix(in oklab,currentColor 12%,transparent)}}
+select.asignar{width:auto;max-width:100%;min-height:36px;padding:5px 12px;font-size:.85rem;border-radius:99px;background:var(--papel);cursor:pointer}
+.por-persona{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.por-persona li{display:grid;gap:2px;padding-bottom:10px;border-bottom:1px solid var(--linea)}
+.por-persona li:last-child{border-bottom:0;padding-bottom:0}
+.por-persona span{font-size:.86rem;color:var(--tenue);overflow-wrap:anywhere}
 .cupo{font-size:.76rem;font-weight:700;color:var(--oro);margin-left:6px}
 .premio{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 12px 14px 16px;border:1px solid var(--linea);border-radius:14px;background:var(--papel-2)}
 .premio .ico{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--suave-o);color:var(--oro)}
@@ -389,6 +401,9 @@ footer .adorno{max-width:280px;margin:0 auto 14px}
   .agregar,.agregar.tres{grid-template-columns:1fr}
   .encabezado{padding:28px 22px;border-radius:22px}
   .organiza{padding:28px 22px}
+  #sesion:has([data-acc=cambiar-vista]) .quien,#sesion .largo{display:none}
+  #sesion .corto{display:inline}
+  #sesion [data-acc=cambiar-vista]{min-width:44px;min-height:44px;padding-inline:12px}
   .organiza .btn{width:100%}
   .pestanas{border-radius:18px}
   .pestana{padding:0 12px;font-size:.86rem}

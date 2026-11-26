@@ -223,7 +223,7 @@ const urlFoto = ruta => `${SB_URL}/storage/v1/object/public/${BUCKET}/${ruta.spl
 const primerNombre = n => String(n || '').split(' ')[0];
 
 function mensajeWhats(p, conv) {
-  return `Estimado(a) ${p.nombre}:\n\nLe invitamos a «${conv.nombre}».${conv.fecha ? `\n${fechaLarga(conv.fecha)}` : ''}${conv.lugar ? `\n${conv.lugar}` : ''}\n\nSu código personal es: ${p.codigo}\n\nIngrese aquí para confirmar su asistencia y consultar los detalles:\n${enlaceBase()}#c=${p.codigo}\n\nEl código es personal; le rogamos no compartirlo.`;
+  return `Estimado(a) ${p.nombre}:\n\nLe invitamos a «${conv.nombre}».${conv.fecha ? `\n${fechaLarga(conv.fecha)}` : ''}${conv.lugar ? `\n${conv.lugar}` : ''}\n\nSu código personal es: ${p.codigo}\n\nIngrese aquí para confirmar su asistencia y consultar los detalles:\n${enlaceBase()}#c=${p.codigo}${p.es_organizador ? '\n\nCon este mismo código también puede administrar el convivio como organizador.' : ''}\n\nEl código es personal; le rogamos no compartirlo.`;
 }
 
 function guardarReciente(r) {
@@ -237,8 +237,11 @@ function detenerRelojes() { relojes.forEach(clearInterval); relojes = []; }
 
 function pintarSesion() {
   const s = $('#sesion');
-  if (E.vista === 'organizador' && E.datos) s.innerHTML = `<span class="quien">Organizas</span><button class="btn fantasma chico" data-acc="salir" title="Cerrar la sesión de este convivio en este equipo">${ic('salir', 's')}Salir</button>`;
-  else if (E.vista === 'invitado' && E.datos) s.innerHTML = `<span class="quien">${esc(E.datos.yo.nombre)}</span><button class="btn fantasma chico" data-acc="salir" title="Cerrar sesión; para volver necesitará su código">${ic('salir', 's')}Salir</button>`;
+  const salir = `<button class="btn fantasma chico" data-acc="salir" title="Cerrar la sesión de este convivio en este equipo">${ic('salir', 's')}Salir</button>`;
+  if (E.vista === 'organizador' && E.datos) s.innerHTML = E.datos.yo
+    ? `<span class="quien">${esc(E.datos.yo.nombre)}</span><button class="btn fantasma chico" data-acc="cambiar-vista" title="Ver su parte como invitado: asistencia, su regalo y lo que lleva" aria-label="Mi parte de invitado">${ic('regalo', 's')}<span class="largo">Mi parte de invitado</span><span class="corto">Invitado</span></button>${salir}`
+    : `<span class="quien">Organizador</span>${salir}`;
+  else if (E.vista === 'invitado' && E.datos) s.innerHTML = `<span class="quien">${esc(E.datos.yo.nombre)}</span>${E.datos.yo.es_organizador ? `<button class="btn fantasma chico" data-acc="cambiar-vista" title="Abrir el panel para administrar el convivio" aria-label="Panel del organizador">${ic('llave', 's')}<span class="largo">Panel del organizador</span><span class="corto">Panel</span></button>` : ''}${salir}`;
   else s.innerHTML = '';
 }
 
@@ -491,6 +494,9 @@ async function refrescar(forzar = false) {
     if (!escribiendo && !deseosSucio && !progBorrador && E.tab !== 'ajustes') pintarContenido();
     pintarSesion();
   } catch (e) {
+    if (/no válido|No encontramos/.test(e.message) && E.vista === 'organizador' && E.datos.yo) {
+      try { const d = await rpc('yo_ver', {p_codigo: E.codigo}); guardarReciente({codigo: E.codigo, tipo: 'invitado', nombre: d.convivio.nombre, quien: d.yo.nombre}); ir('invitado', {codigo: E.codigo, datos: d, tab: 'inicio'}); aviso('Ya no tiene acceso al panel del organizador'); return; } catch {}
+    }
     if (/no válido|No encontramos/.test(e.message)) {
       quitarReciente(E.codigo); LS.quitar('cv_sesion'); ir('inicio');
       aviso(E.vista === 'organizador' ? 'Este convivio ya no existe' : 'Su código ya no es válido. Solicite uno nuevo al organizador.', true);
@@ -538,6 +544,7 @@ const VISTAS_ORG = {
                 <div class="nombre">${esc(p.nombre)}</div>
                 <div class="datos">
                   <span class="mono" title="Código de ${esc(p.nombre)}">${esc(p.codigo)}</span>
+                  ${p.es_organizador ? `<span class="insignia oro" title="Puede administrar el convivio con su código">${ic('llave', 's')}Organizador</span>` : ''}
                   ${c.act.asistencia ? etiquetaAsistencia(p) : ''}
                   ${c.act.cuota ? `<button class="insignia ${p.cuota_pagada ? 'si' : 'oro'}" data-acc="cuota" title="${p.cuota_pagada ? 'Marcar como pendiente de pago' : 'Registrar el pago de ' + quetzales(c.cuota)}">${ic('billete', 's')}${p.cuota_pagada ? 'Pagado' : 'Pendiente ' + quetzales(c.cuota)}</button>` : ''}
                   ${c.act.intercambio ? `<button class="insignia ${p.en_intercambio ? 'si' : ''}" data-acc="en-intercambio" title="${p.en_intercambio ? 'Sacar del intercambio' : 'Meter al intercambio'}">${ic('regalo', 's')}${p.en_intercambio ? 'En intercambio' : 'Sin intercambio'}</button>` : ''}
@@ -564,9 +571,11 @@ const VISTAS_ORG = {
           <p class="ayuda">${pagaron} de ${inv.length} han pagado. Use «Pendiente» o «Pagado» en cada invitado para actualizarlo.</p>
         </section>` : ''}
         <section class="panel">
-          <div class="titulo-sec"><h2>Código de organizador</h2></div>
-          <div class="clave-org"><span class="mono">${esc(verCodigo(c.codigo_admin))}</span><button class="btn salida chico" data-acc="copiar-clave" title="Copiar el código de organizador">${ic('copiar', 's')}Copiar</button></div>
-          <p class="ayuda">Con este código puede ingresar al panel desde otro equipo. Es confidencial.</p>
+          <div class="titulo-sec"><h2>Organizadores</h2></div>
+          ${E.datos.principal ? `<div class="clave-org"><span class="mono">${esc(verCodigo(c.codigo_admin))}</span><button class="btn salida chico" data-acc="copiar-clave" title="Copiar el código de organizador principal">${ic('copiar', 's')}Copiar</button></div>
+          <p class="ayuda">Código del organizador principal. Con él puede ingresar desde otro equipo. Es confidencial.</p>` : `<p class="ayuda" style="margin-top:0">Usted administra este convivio con su código personal.</p>`}
+          ${inv.some(i => i.es_organizador) ? `<div class="quienes-van" style="margin-top:12px">${inv.filter(i => i.es_organizador).map(i => `<span class="insignia oro">${ic('llave', 's')}${esc(i.nombre)}</span>`).join('')}</div>` : ''}
+          ${E.datos.principal ? `<p class="ayuda">Para que otra persona le ayude a organizar, seleccione el lápiz junto a su nombre y elija «Nombrar organizador». Ingresará con su propio código.</p>` : ''}
           ${inv.length ? `<div class="acciones"><button class="btn salida chico" data-acc="copiar-todos" title="Copiar la lista de nombres con su código">${ic('lista', 's')}Copiar todos los códigos</button></div>` : ''}
         </section>
       </div>
@@ -609,19 +618,29 @@ const VISTAS_ORG = {
   },
 
   comida() {
-    const ll = E.datos.llevar;
+    const ll = E.datos.llevar, inv = E.datos.invitados;
+    const porPersona = inv.map(p => ({p, cosas: ll.filter(l => l.quienes.some(q => q.id === p.id))}));
+    const con = porPersona.filter(x => x.cosas.length), sin = porPersona.filter(x => !x.cosas.length);
     return `<div class="rejilla"><div class="columna"><section class="panel">
-      <div class="titulo-sec"><div><h2>Alimentos y artículos</h2><p>Registre lo necesario. Los invitados se inscriben y también pueden agregar artículos.</p></div></div>
+      <div class="titulo-sec"><div><h2>Alimentos y artículos</h2><p>Registre lo necesario y asigne a quién le corresponde. Los invitados también pueden inscribirse en lo que quede libre.</p></div></div>
       <form class="agregar tres" data-form="llevar">
         <div><label for="lQue">Artículo</label><input id="lQue" maxlength="80" placeholder="Bebidas, tamales, vajilla…"></div>
         <div><label for="lCuantos">Cupo</label><input id="lCuantos" type="number" min="1" max="50" value="1" title="Cuántas personas pueden inscribirse"></div>
         <button class="btn prim" type="submit" title="Agregar a la lista">${ic('mas')}Agregar</button>
       </form>
       <p class="ayuda" style="margin-bottom:18px">El cupo indica cuántas personas pueden inscribirse en cada artículo.</p>
-      <ul class="cosas">${ll.length ? ll.map(l => `<li class="cosa ${l.quienes.length >= l.cuantos ? 'completa' : ''}" data-id="${l.id}"><div style="min-width:0"><div class="que">${esc(l.que)}<span class="cupo">${l.quienes.length}/${l.cuantos}</span></div><div class="quienes">${l.quienes.length ? 'A cargo de: ' + l.quienes.map(q => esc(q.nombre)).join(', ') : 'Sin inscritos'}</div></div><button class="icono" data-acc="llevar-quitar" title="Quitar «${esc(l.que)}» de la lista" aria-label="Quitar ${esc(l.que)}">${ic('basura')}</button></li>`).join('') : '<li class="vacio">Aún no hay artículos registrados.</li>'}</ul>
+      <ul class="cosas">${ll.length ? ll.map(l => { const libres = inv.filter(p => !l.quienes.some(q => q.id === p.id)); return `<li class="cosa ${l.quienes.length >= l.cuantos ? 'completa' : ''}" data-id="${l.id}"><div style="min-width:0"><div class="que">${esc(l.que)}<span class="cupo">${l.quienes.length}/${l.cuantos}</span></div>
+        <div class="asignados">${l.quienes.map(q => `<span class="insignia ${q.asignado ? 'si' : ''}" title="${q.asignado ? 'Asignado por el organizador' : 'Se inscribió por su cuenta'}">${esc(q.nombre)}<button class="quitar-chip" data-acc="desasignar" data-inv="${q.id}" title="Quitar a ${esc(q.nombre)} de «${esc(l.que)}»" aria-label="Quitar a ${esc(q.nombre)} de ${esc(l.que)}">${ic('x', 's')}</button></span>`).join('')}
+          ${libres.length ? `<label class="sr" for="as-${l.id}">Asignar ${esc(l.que)} a</label><select id="as-${l.id}" class="asignar" data-cambio="asignar" title="Elegir quién lleva «${esc(l.que)}»"><option value="">Asignar a…</option>${libres.map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join('')}</select>` : ''}
+          ${!l.quienes.length && !inv.length ? '<span class="ayuda" style="margin:0">Agregue invitados para poder asignarlo.</span>' : ''}</div></div>
+        <button class="icono" data-acc="llevar-quitar" title="Quitar «${esc(l.que)}» de la lista" aria-label="Quitar ${esc(l.que)}">${ic('basura')}</button></li>`; }).join('') : '<li class="vacio">Aún no hay artículos registrados.</li>'}</ul>
     </section></div>
     <div class="columna"><section class="panel"><div class="titulo-sec"><h2>Resumen</h2></div>
-      <div class="cifras"><div><b>${ll.length}</b><span>artículos</span></div><div><b>${ll.filter(l => l.quienes.length >= l.cuantos).length}</b><span>cubiertos</span></div><div><b>${ll.filter(l => !l.quienes.length).length}</b><span>sin inscritos</span></div></div>
+      <div class="cifras"><div><b>${ll.length}</b><span>artículos</span></div><div><b>${ll.filter(l => l.quienes.length >= l.cuantos).length}</b><span>cubiertos</span></div><div><b>${ll.filter(l => !l.quienes.length).length}</b><span>sin asignar</span></div></div>
+    </section>
+    <section class="panel"><div class="titulo-sec"><div><h2>Por persona</h2><p>${con.length} de ${inv.length} ${inv.length === 1 ? 'invitado lleva' : 'invitados llevan'} algo.</p></div></div>
+      ${con.length ? `<ul class="por-persona">${con.map(x => `<li><b>${esc(x.p.nombre)}</b><span>${x.cosas.map(l => esc(l.que)).join(', ')}</span></li>`).join('')}</ul>` : '<p class="vacio">Aún no hay asignaciones.</p>'}
+      ${sin.length && con.length ? `<p class="ayuda" style="margin-top:14px">Sin artículo: ${sin.map(x => esc(x.p.nombre)).join(', ')}.</p>` : ''}
     </section></div></div>`;
   },
 
@@ -675,8 +694,8 @@ const VISTAS_ORG = {
     temaElegido = {tema: c.tema, color: c.color};
     return `<form data-form="ajustes">${formConvivio(c)}
       <div class="acciones" style="justify-content:flex-end;margin-top:0;margin-bottom:24px"><button class="btn prim" type="submit" title="Guardar los cambios del convivio">${ic('check', 's')}Guardar cambios</button></div></form>
-      <section class="panel"><div class="titulo-sec"><div><h2>Eliminar el convivio</h2><p>Se eliminan los invitados, sus códigos, los alimentos, la rifa, las votaciones y las fotografías.</p></div></div>
-      <button class="btn peligro" data-acc="borrar-convivio" title="Eliminar este convivio de forma permanente">${ic('basura', 's')}Eliminar el convivio</button></section>`;
+      ${E.datos.principal ? `<section class="panel"><div class="titulo-sec"><div><h2>Eliminar el convivio</h2><p>Se eliminan los invitados, sus códigos, los alimentos, la rifa, las votaciones y las fotografías.</p></div></div>
+      <button class="btn peligro" data-acc="borrar-convivio" title="Eliminar este convivio de forma permanente">${ic('basura', 's')}Eliminar el convivio</button></section>` : ''}`;
   }
 };
 
@@ -761,13 +780,13 @@ const VISTAS_INV = {
     const mias = ll.filter(l => l.quienes.some(q => q.id === yo.id));
     return `<div class="rejilla"><div class="columna"><section class="panel">
       <div class="titulo-sec"><div><h2>Alimentos y artículos</h2><p>Inscríbase en lo que llevará para coordinar sin repeticiones.</p></div></div>
-      <ul class="cosas">${ll.length ? ll.map(l => { const mia = l.quienes.some(q => q.id === yo.id), llena = l.quienes.length >= l.cuantos; return `<li class="cosa ${llena ? 'completa' : ''} ${mia ? 'mia' : ''}" data-id="${l.id}"><div style="min-width:0"><div class="que">${esc(l.que)}<span class="cupo">${l.quienes.length}/${l.cuantos}</span></div><div class="quienes">${l.quienes.length ? 'A cargo de: ' + l.quienes.map(q => q.id === yo.id ? '<b>usted</b>' : esc(q.nombre)).join(', ') : 'Sin inscritos'}</div></div>${mia ? `<button class="btn sec chico" data-acc="llevar" data-v="0" title="Cancelar su inscripción">Cancelar</button>` : llena ? `<span class="insignia si">${ic('check', 's')}Cubierto</span>` : `<button class="btn prim chico" data-acc="llevar" data-v="1" title="Inscribirse para llevar ${esc(l.que)}">${ic('check', 's')}Me inscribo</button>`}</li>`; }).join('') : '<li class="vacio">El organizador aún no registra artículos. Puede agregar lo que llevará.</li>'}</ul>
+      <ul class="cosas">${ll.length ? ll.map(l => { const mia = l.quienes.some(q => q.id === yo.id), llena = l.quienes.length >= l.cuantos; const asignada = l.quienes.some(q => q.id === yo.id && q.asignado); return `<li class="cosa ${llena ? 'completa' : ''} ${mia ? 'mia' : ''}" data-id="${l.id}"><div style="min-width:0"><div class="que">${esc(l.que)}<span class="cupo">${l.quienes.length}/${l.cuantos}</span></div><div class="quienes">${l.quienes.length ? 'A cargo de: ' + l.quienes.map(q => q.id === yo.id ? '<b>usted</b>' : esc(q.nombre)).join(', ') : 'Sin inscritos'}</div></div>${asignada ? `<span class="insignia oro" title="El organizador le asignó este artículo">${ic('llave', 's')}Asignado</span>` : mia ? `<button class="btn sec chico" data-acc="llevar" data-v="0" title="Cancelar su inscripción">Cancelar</button>` : llena ? `<span class="insignia si">${ic('check', 's')}Cubierto</span>` : `<button class="btn prim chico" data-acc="llevar" data-v="1" title="Inscribirse para llevar ${esc(l.que)}">${ic('check', 's')}Me inscribo</button>`}</li>`; }).join('') : '<li class="vacio">El organizador aún no registra artículos. Puede agregar lo que llevará.</li>'}</ul>
     </section></div>
     <div class="columna">
       <section class="panel"><div class="titulo-sec"><div><h2>Agregar un artículo</h2><p>Si lo que llevará no está en la lista, puede agregarlo.</p></div></div>
         <form class="agregar" data-form="llevar-mio"><div><label for="lMio">Artículo</label><input id="lMio" maxlength="80" placeholder="Postre, hielo, servilletas…"></div><button class="btn prim" type="submit" title="Agregar e inscribirse">${ic('mas')}Agregar</button></form>
       </section>
-      <section class="panel"><div class="titulo-sec"><h2>Sus artículos</h2></div>${mias.length ? `<ul class="deseos-amigo">${mias.map(l => `<li>${estrella()}<span>${esc(l.que)}</span></li>`).join('')}</ul>` : '<p class="ayuda" style="margin:0">Aún no tiene inscripciones.</p>'}</section>
+      <section class="panel"><div class="titulo-sec"><h2>Sus artículos</h2></div>${mias.length ? `<ul class="deseos-amigo">${mias.map(l => `<li>${estrella()}<span>${esc(l.que)}${l.quienes.some(q => q.id === yo.id && q.asignado) ? ' <small class="ayuda" style="display:inline">(asignado por el organizador)</small>' : ''}</span></li>`).join('')}</ul>` : '<p class="ayuda" style="margin:0">Aún no tiene inscripciones.</p>'}</section>
     </div></div>`;
   },
 
@@ -861,10 +880,11 @@ function editarInvitado(p) {
       <div class="campo"><label for="pNombre">Nombre</label><input id="pNombre" maxlength="60" value="${esc(p.nombre)}"></div>
       <div class="pie" style="margin-top:0"><button class="btn prim" type="submit" title="Guardar el nombre">Guardar nombre</button></div>
     </form>
-    <div class="menu" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--linea)">
+    ${E.datos.principal || !p.es_organizador ? `<div class="menu" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--linea)">
+      ${E.datos.principal ? `<button class="btn sec" id="pOrg" title="${p.es_organizador ? `Quitar a ${esc(p.nombre)} la administración del convivio` : `Permitir que ${esc(p.nombre)} administre el convivio con su propio código`}">${ic('llave', 's')}${p.es_organizador ? 'Quitar como organizador' : 'Nombrar organizador'}</button>` : ''}
       <button class="btn sec" id="pCodigo" title="Si su código fue visto por otra persona, genere uno nuevo; el anterior queda anulado">${ic('recargar', 's')}Generar un código nuevo</button>
       <button class="btn peligro" id="pQuitar" title="Retirar a ${esc(p.nombre)} del convivio">${ic('basura', 's')}Retirar del convivio</button>
-    </div>
+    </div>` : `<p class="ayuda" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--linea)">${esc(p.nombre)} es organizador. Solo el organizador principal puede cambiar su código o retirarlo.</p>`}
     <div class="pie"><button class="btn fantasma" data-cerrar title="Cerrar">Cerrar</button></div>`,
     d => {
       d.querySelector('#fPersona').addEventListener('submit', async e => {
@@ -874,12 +894,20 @@ function editarInvitado(p) {
           d.close(); await refrescar(true); aviso('Nombre guardado');
         });
       });
-      d.querySelector('#pCodigo').addEventListener('click', async () => {
+      d.querySelector('#pOrg')?.addEventListener('click', async () => {
+        d.close();
+        const nombrar = !p.es_organizador;
+        if (!await confirmar(nombrar
+          ? {titulo: `¿Nombrar organizador a ${p.nombre}?`, texto: 'Con su mismo código podrá administrar todo el convivio: invitados, sorteo, alimentos, programa, rifa, votaciones, fotografías y ajustes. No podrá eliminar el convivio ni nombrar a otros organizadores.', si: 'Nombrar organizador'}
+          : {titulo: `¿Quitar a ${p.nombre} como organizador?`, texto: 'Seguirá como invitado, pero ya no podrá administrar el convivio.', si: 'Quitar', tipo: 'acen'})) return;
+        try { await rpc('admin_organizador', {p_codigo: E.codigo, p_id: p.id, p_valor: nombrar}); await refrescar(true); aviso(nombrar ? `${p.nombre} ya puede administrar el convivio con su código` : `${p.nombre} ya no es organizador`); } catch (e) { aviso(e.message, true); }
+      });
+      d.querySelector('#pCodigo')?.addEventListener('click', async () => {
         d.close();
         if (!await confirmar({titulo: `¿Código nuevo para ${p.nombre}?`, texto: `El código <span class="mono">${esc(p.codigo)}</span> quedará anulado. Deberá enviarle el nuevo.`, si: 'Generar código'})) return;
         try { const n = await rpc('admin_nuevo_codigo', {p_codigo: E.codigo, p_id: p.id}); await refrescar(true); aviso(`Nuevo código de ${p.nombre}: ${n}`); } catch (e) { aviso(e.message, true); }
       });
-      d.querySelector('#pQuitar').addEventListener('click', async () => {
+      d.querySelector('#pQuitar')?.addEventListener('click', async () => {
         d.close();
         const s = E.datos.convivio.sorteado && p.en_intercambio;
         if (!await confirmar({titulo: `¿Retirar a ${p.nombre}?`, texto: (s ? 'El sorteo ya se realizó: al retirarlo se anula y deberá realizarse de nuevo. ' : '') + 'Se eliminan su código, su lista de deseos, sus votos y sus inscripciones.', si: 'Retirar', tipo: 'acen'})) return;
@@ -891,6 +919,16 @@ function editarInvitado(p) {
 const filaId = el => el.closest('[data-id]')?.dataset.id;
 const ACC = {
   'salir'() { LS.quitar('cv_sesion'); ir('inicio'); },
+  async 'cambiar-vista'(b) {
+    await conCarga(b, async () => {
+      if (E.vista === 'organizador') { const d = await rpc('yo_ver', {p_codigo: E.codigo}); ir('invitado', {codigo: E.codigo, datos: d, tab: 'inicio'}); }
+      else { const d = await rpc('admin_ver', {p_codigo: E.codigo}); ir('organizador', {codigo: E.codigo, datos: d, tab: 'invitados'}); }
+    });
+  },
+  async 'desasignar'(b) {
+    const l = E.datos.llevar.find(x => x.id === filaId(b)), q = l.quienes.find(x => x.id === b.dataset.inv);
+    await conCarga(b, async () => { await rpc('admin_llevar_asignar', {p_codigo: E.codigo, p_id: l.id, p_invitado: q.id, p_valor: false}); await refrescar(true); aviso(`${q.nombre} ya no lleva «${l.que}»`); });
+  },
   'ir-inicio'() { ir('inicio'); },
   'ir-crear'() { ir('crear'); },
   'reciente'(b) { entrarCon(b.dataset.cod, b); },
@@ -1106,6 +1144,12 @@ app.addEventListener('change', async e => {
     catch (err) { t.checked = !t.checked; t.disabled = false; aviso(err.message, true); }
   }
   if (k === 'fotos' && t.files?.length) { await subirFotos(t.files); t.value = ''; }
+  if (k === 'asignar' && t.value) {
+    const l = E.datos.llevar.find(x => x.id === filaId(t)), p = E.datos.invitados.find(x => x.id === t.value);
+    t.disabled = true;
+    try { await rpc('admin_llevar_asignar', {p_codigo: E.codigo, p_id: l.id, p_invitado: p.id, p_valor: true}); t.blur(); await refrescar(true); aviso(`«${l.que}» asignado a ${p.nombre}`); }
+    catch (err) { t.disabled = false; t.value = ''; aviso(err.message, true); }
+  }
 });
 
 $('#irInicio').addEventListener('click', e => { e.preventDefault(); LS.quitar('cv_sesion'); ir('inicio'); });

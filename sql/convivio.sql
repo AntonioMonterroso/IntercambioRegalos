@@ -111,6 +111,9 @@ create table if not exists public.fotos (
 );
 create index if not exists fotos_convivio on public.fotos (convivio_id, creado_en desc);
 
+alter table public.invitados add column if not exists es_organizador boolean not null default false;
+alter table public.llevar_apuntes add column if not exists asignado boolean not null default false;
+
 do $$
 declare t text;
 begin
@@ -159,10 +162,31 @@ set search_path = public
 as $$
 declare
   v public.convivios;
+  c text := upper(regexp_replace(coalesce(p_codigo, ''), '[^A-Za-z0-9]', '', 'g'));
 begin
-  select * into v from public.convivios where codigo_admin = upper(regexp_replace(coalesce(p_codigo, ''), '[^A-Za-z0-9]', '', 'g'));
+  select * into v from public.convivios where codigo_admin = c;
+  if not found then
+    select cv.* into v from public.convivios cv join public.invitados i on i.convivio_id = cv.id where i.codigo = c and i.es_organizador;
+  end if;
   if not found then
     raise exception 'Código de organizador no válido' using errcode = 'P0001';
+  end if;
+  return v;
+end
+$$;
+
+create or replace function public.cv_principal(p_codigo text)
+returns public.convivios
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  v public.convivios := cv_admin(p_codigo);
+begin
+  if v.codigo_admin <> upper(regexp_replace(coalesce(p_codigo, ''), '[^A-Za-z0-9]', '', 'g')) then
+    raise exception 'Esta acción corresponde únicamente al organizador principal' using errcode = 'P0001';
   end if;
   return v;
 end
@@ -235,7 +259,7 @@ as $$
     'llevar', coalesce((
       select json_agg(json_build_object(
         'id', l.id, 'que', l.que, 'cuantos', l.cuantos,
-        'quienes', coalesce((select json_agg(json_build_object('id', i.id, 'nombre', i.nombre) order by lower(i.nombre)) from public.llevar_apuntes a join public.invitados i on i.id = a.invitado_id where a.llevar_id = l.id), '[]'::json)
+        'quienes', coalesce((select json_agg(json_build_object('id', i.id, 'nombre', i.nombre, 'asignado', a.asignado) order by lower(i.nombre)) from public.llevar_apuntes a join public.invitados i on i.id = a.invitado_id where a.llevar_id = l.id), '[]'::json)
       ) order by l.creado_en)
       from public.llevar l where l.convivio_id = v.id
     ), '[]'::json),
@@ -262,6 +286,9 @@ declare
   c text := upper(regexp_replace(coalesce(p_codigo, ''), '[^A-Za-z0-9]', '', 'g'));
 begin
   if exists (select 1 from public.convivios where codigo_admin = c) then
+    return json_build_object('tipo', 'organizador', 'codigo', c);
+  end if;
+  if exists (select 1 from public.invitados where codigo = c and es_organizador) then
     return json_build_object('tipo', 'organizador', 'codigo', c);
   end if;
   if exists (select 1 from public.invitados where codigo = c) then
@@ -340,13 +367,18 @@ set search_path = public
 as $$
 declare
   v public.convivios := cv_admin(p_codigo);
+  c text := upper(regexp_replace(coalesce(p_codigo, ''), '[^A-Za-z0-9]', '', 'g'));
+  principal boolean := v.codigo_admin = c;
 begin
   return (json_build_object(
-    'convivio', cv_publico(v)::jsonb || jsonb_build_object('codigo_admin', v.codigo_admin),
+    'convivio', cv_publico(v)::jsonb || jsonb_build_object('codigo_admin', case when principal then v.codigo_admin end),
+    'principal', principal,
+    'yo', case when principal then null else (select json_build_object('id', i.id, 'nombre', i.nombre) from public.invitados i where i.codigo = c) end,
     'invitados', coalesce((
       select json_agg(json_build_object(
         'id', i.id, 'nombre', i.nombre, 'codigo', i.codigo, 'asistencia', i.asistencia, 'acompanantes', i.acompanantes,
-        'en_intercambio', i.en_intercambio, 'tiene_deseos', i.deseos <> '', 'ya_compro', i.ya_compro, 'cuota_pagada', i.cuota_pagada
+        'en_intercambio', i.en_intercambio, 'tiene_deseos', i.deseos <> '', 'ya_compro', i.ya_compro, 'cuota_pagada', i.cuota_pagada,
+        'es_organizador', i.es_organizador
       ) order by lower(i.nombre))
       from public.invitados i where i.convivio_id = v.id
     ), '[]'::json),
@@ -441,6 +473,37 @@ begin
 end
 $$;
 
+create or replace function public.cv_tocar_organizador(p_codigo text, v public.convivios, p_id uuid)
+returns void
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if v.codigo_admin <> upper(regexp_replace(coalesce(p_codigo, ''), '[^A-Za-z0-9]', '', 'g'))
+     and exists (select 1 from public.invitados where id = p_id and convivio_id = v.id and es_organizador) then
+    raise exception 'Solo el organizador principal puede modificar a otro organizador' using errcode = 'P0001';
+  end if;
+end
+$$;
+
+create or replace function public.admin_organizador(p_codigo text, p_id uuid, p_valor boolean)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v public.convivios := cv_principal(p_codigo);
+begin
+  update public.invitados set es_organizador = coalesce(p_valor, false) where id = p_id and convivio_id = v.id;
+  if not found then
+    raise exception 'Ese invitado ya no está en el convivio' using errcode = 'P0001';
+  end if;
+end
+$$;
+
 create or replace function public.admin_quitar(p_codigo text, p_id uuid)
 returns void
 language plpgsql
@@ -450,6 +513,7 @@ as $$
 declare
   v public.convivios := cv_admin(p_codigo);
 begin
+  perform cv_tocar_organizador(p_codigo, v, p_id);
   if v.sorteado_en is not null and exists (select 1 from public.invitados where id = p_id and convivio_id = v.id and en_intercambio) then
     perform cv_quitar_sorteo(v.id);
   end if;
@@ -468,6 +532,7 @@ declare
   nuevo text;
   intento int := 0;
 begin
+  perform cv_tocar_organizador(p_codigo, v, p_id);
   loop
     begin
       update public.invitados set codigo = ir_codigo(6) where id = p_id and convivio_id = v.id returning codigo into nuevo;
@@ -550,7 +615,7 @@ security definer
 set search_path = public
 as $$
 declare
-  v public.convivios := cv_admin(p_codigo);
+  v public.convivios := cv_principal(p_codigo);
 begin
   delete from public.convivios where id = v.id;
 end
@@ -585,6 +650,37 @@ declare
   v public.convivios := cv_admin(p_codigo);
 begin
   delete from public.llevar where id = p_id and convivio_id = v.id;
+end
+$$;
+
+create or replace function public.admin_llevar_asignar(p_codigo text, p_id uuid, p_invitado uuid, p_valor boolean)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v public.convivios := cv_admin(p_codigo);
+  l public.llevar;
+  n int;
+begin
+  select * into l from public.llevar where id = p_id and convivio_id = v.id;
+  if not found then
+    raise exception 'Ese artículo ya no está en la lista' using errcode = 'P0001';
+  end if;
+  if not exists (select 1 from public.invitados where id = p_invitado and convivio_id = v.id) then
+    raise exception 'Ese invitado ya no está en el convivio' using errcode = 'P0001';
+  end if;
+  if coalesce(p_valor, false) then
+    insert into public.llevar_apuntes (llevar_id, invitado_id, asignado) values (l.id, p_invitado, true)
+      on conflict (llevar_id, invitado_id) do update set asignado = true;
+    select count(*) into n from public.llevar_apuntes where llevar_id = l.id;
+    if n > l.cuantos then
+      update public.llevar set cuantos = least(n, 50) where id = l.id;
+    end if;
+  else
+    delete from public.llevar_apuntes where llevar_id = l.id and invitado_id = p_invitado;
+  end if;
 end
 $$;
 
@@ -765,7 +861,8 @@ begin
     'convivio', cv_publico(v),
     'yo', json_build_object(
       'id', yo.id, 'nombre', yo.nombre, 'asistencia', yo.asistencia, 'acompanantes', yo.acompanantes,
-      'en_intercambio', yo.en_intercambio, 'deseos', yo.deseos, 'ya_compro', yo.ya_compro, 'cuota_pagada', yo.cuota_pagada
+      'en_intercambio', yo.en_intercambio, 'deseos', yo.deseos, 'ya_compro', yo.ya_compro, 'cuota_pagada', yo.cuota_pagada,
+      'es_organizador', yo.es_organizador
     ),
     'amigo', case when amigo.id is null then null else json_build_object('nombre', amigo.nombre, 'deseos', amigo.deseos) end,
     'invitados', coalesce((select json_agg(json_build_object('id', i.id, 'nombre', i.nombre, 'asistencia', i.asistencia, 'acompanantes', i.acompanantes) order by lower(i.nombre)) from public.invitados i where i.convivio_id = v.id), '[]'::json),
@@ -870,6 +967,9 @@ begin
     end if;
     insert into public.llevar_apuntes (llevar_id, invitado_id) values (l.id, yo.id) on conflict do nothing;
   else
+    if exists (select 1 from public.llevar_apuntes where llevar_id = l.id and invitado_id = yo.id and asignado) then
+      raise exception 'Este artículo se lo asignó el organizador. Para cambiarlo, comuníquese con el organizador.' using errcode = 'P0001';
+    end if;
     delete from public.llevar_apuntes where llevar_id = l.id and invitado_id = yo.id;
   end if;
 end
