@@ -104,6 +104,7 @@ let progBorrador = null;
 let filtroInv = '';
 let deseosSucio = false;
 let dietaSucio = false;
+let deseosAbiertos = new Set();
 
 function encabezados(extra = {}) {
   const h = {'apikey': SB_KEY, ...extra};
@@ -274,7 +275,7 @@ function pintarSesion() {
 function ir(vista, extra = {}) {
   detenerRelojes();
   E = {vista, codigo: extra.codigo || null, datos: extra.datos || null, tab: extra.tab || null};
-  cajaAbierta = false; progBorrador = null; filtroInv = ''; deseosSucio = false; dietaSucio = false; filtros = {};
+  cajaAbierta = false; progBorrador = null; filtroInv = ''; deseosSucio = false; dietaSucio = false; filtros = {}; deseosAbiertos = new Set();
   if (vista === 'inicio' || vista === 'crear') aplicarTema('navidad');
   else aplicarTema(E.datos.convivio.tema, E.datos.convivio.color);
   if (vista === 'inicio') pintarInicio();
@@ -865,7 +866,11 @@ const VISTAS_ORG = {
         </section>
         <section class="panel">
           <div class="titulo-sec"><div><h2>Participantes</h2><p>${en.length} de ${inv.length} invitados</p></div></div>
-          <ul class="lista">${en.length ? en.map(p => `<li class="fila"><div><div class="nombre">${esc(p.nombre)}</div><div class="datos"><span class="insignia ${p.tiene_deseos ? 'si' : ''}">${ic(p.tiene_deseos ? 'check' : 'lista', 's')}${p.tiene_deseos ? 'Con lista de deseos' : 'Sin lista de deseos'}</span>${c.sorteado ? `<span class="insignia ${p.ya_compro ? 'si' : ''}">${ic('bolsa', 's')}${p.ya_compro ? 'Regalo adquirido' : 'Regalo pendiente'}</span>` : ''}</div></div></li>`).join('') : '<li class="vacio">Aún no hay participantes.</li>'}</ul>
+          <ul class="lista">${en.length ? en.map(p => {
+            const ver = E.datos.principal && p.tiene_deseos && p.deseos, abierta = ver && deseosAbiertos.has(p.id);
+            return `<li class="fila" data-id="${p.id}"><div><div class="nombre">${esc(p.nombre)}</div><div class="datos"><span class="insignia ${p.tiene_deseos ? 'si' : ''}">${ic(p.tiene_deseos ? 'check' : 'lista', 's')}${p.tiene_deseos ? 'Con lista de deseos' : 'Sin lista de deseos'}</span>${c.sorteado ? `<span class="insignia ${p.ya_compro ? 'si' : ''}">${ic('bolsa', 's')}${p.ya_compro ? 'Regalo adquirido' : 'Regalo pendiente'}</span>` : ''}${ver ? `<button class="enlace" data-acc="ver-deseos" aria-expanded="${abierta}" title="${abierta ? 'Ocultar' : 'Mostrar'} la lista de deseos de ${esc(p.nombre)}">${abierta ? 'Ocultar lista de deseos' : 'Ver lista de deseos'}</button>` : ''}</div></div>${abierta ? `<ul class="deseos-amigo deseos-org">${lineas(p.deseos).map(x => `<li>${estrella()}<span>${enlaces(x)}</span></li>`).join('')}</ul>` : ''}</li>`;
+          }).join('') : '<li class="vacio">Aún no hay participantes.</li>'}</ul>
+          ${E.datos.principal && conDeseos ? '<p class="ayuda" style="margin:10px 0 0">Las listas de deseos solo las ve el organizador principal.</p>' : ''}
         </section>
       </div>
       <div class="columna">
@@ -1147,6 +1152,12 @@ function editarInvitado(p) {
 const filaId = el => el.closest('[data-id]')?.dataset.id;
 const ACC = {
   'salir'() { LS.quitar('cv_sesion'); ir('inicio'); },
+  'ver-deseos'(b) {
+    const id = filaId(b);
+    if (deseosAbiertos.has(id)) deseosAbiertos.delete(id); else deseosAbiertos.add(id);
+    pintarContenido();
+    document.querySelector(`[data-id="${id}"] [data-acc="ver-deseos"]`)?.focus({preventScroll: true});
+  },
   async 'cambiar-vista'(b) {
     await conCarga(b, async () => {
       if (E.vista === 'organizador') { const d = await rpc('yo_ver', {p_codigo: E.codigo}); ir('invitado', {codigo: E.codigo, datos: d, tab: 'inicio'}); }

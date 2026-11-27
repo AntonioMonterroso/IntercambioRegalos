@@ -365,6 +365,8 @@ select.asignar{width:auto;max-width:100%;min-height:36px;padding:5px 12px;font-s
 .deseos-amigo{list-style:none;padding:0;margin:0;display:grid;gap:8px}
 .deseos-amigo li{display:flex;gap:12px;align-items:flex-start;padding:11px 14px;border-radius:12px;background:var(--papel-2);border:1px solid var(--linea);overflow-wrap:anywhere}
 .deseos-amigo li .estrella{color:var(--oro);margin-top:6px}
+.deseos-org{grid-column:1/-1;margin-top:4px}
+.deseos-org li{background:var(--papel);padding:9px 12px;font-size:.92rem}
 .interruptor{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 16px;border-radius:14px;border:1px solid var(--linea);background:var(--papel-2);cursor:pointer;margin:0}
 .interruptor input{position:absolute;opacity:0;width:1px;height:1px}
 .interruptor .riel{flex:none;width:54px;height:32px;border-radius:99px;background:var(--linea);position:relative;transition:background-color .2s var(--ease-out)}

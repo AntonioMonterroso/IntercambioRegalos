@@ -490,7 +490,7 @@ begin
     'invitados', coalesce((
       select json_agg(json_build_object(
         'id', i.id, 'nombre', i.nombre, 'codigo', i.codigo, 'asistencia', i.asistencia, 'acompanantes', i.acompanantes,
-        'en_intercambio', i.en_intercambio, 'tiene_deseos', i.deseos <> '', 'ya_compro', i.ya_compro, 'cuota_pagada', i.cuota_pagada,
+        'en_intercambio', i.en_intercambio, 'tiene_deseos', i.deseos <> '', 'deseos', case when principal then i.deseos end, 'ya_compro', i.ya_compro, 'cuota_pagada', i.cuota_pagada,
         'es_organizador', i.es_organizador, 'dieta', i.dieta, 'plato_id', i.plato_id
       ) order by lower(i.nombre))
       from public.invitados i where i.convivio_id = v.id
