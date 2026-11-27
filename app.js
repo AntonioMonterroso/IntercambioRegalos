@@ -14,14 +14,26 @@ const TEMAS = {
 const ACTIVIDADES = [
   {k: 'asistencia', n: 'Confirmar asistencia', d: 'Cada invitado confirma si asiste y con cuántos acompañantes.', i: 'check'},
   {k: 'intercambio', n: 'Intercambio de regalos', d: 'Sorteo confidencial, lista de deseos y presupuesto.', i: 'regalo'},
-  {k: 'llevar', n: 'Quién lleva qué', d: 'Alimentos, bebidas y artículos; cada invitado se inscribe.', i: 'comida'},
+  {k: 'llevar', n: 'Quién lleva qué', d: 'Alimentos, bebidas y artículos; usted asigna o cada invitado se inscribe.', i: 'comida'},
+  {k: 'menu', n: 'Menú', d: 'Cada invitado elige su plato entre las opciones.', i: 'plato'},
+  {k: 'dieta', n: 'Restricciones alimentarias', d: 'Alergias o preferencias de cada invitado.', i: 'hoja'},
   {k: 'restaurante', n: 'En restaurante', d: 'Precio promedio por plato, para que cada invitado lo tenga presente.', i: 'plato'},
   {k: 'cuota_act', n: 'Cooperación', d: 'Monto por persona y control de pagos.', i: 'billete'},
+  {k: 'tareas', n: 'Comisiones y tareas', d: 'Decoración, música, juegos; usted asigna o cada invitado se inscribe.', i: 'tareas'},
+  {k: 'transporte', n: 'Transporte compartido', d: 'Quien lleva vehículo ofrece lugares y los demás los reservan.', i: 'carro'},
   {k: 'programa', n: 'Programa del día', d: 'Horario de las actividades.', i: 'reloj'},
   {k: 'rifa', n: 'Rifa', d: 'Premios sorteados entre los asistentes.', i: 'boleto'},
   {k: 'votos', n: 'Votaciones', d: 'Mejor atuendo, mejor decoración u otras categorías.', i: 'trofeo'},
-  {k: 'fotos', n: 'Álbum de fotos', d: 'Los invitados comparten sus fotografías.', i: 'camara'}
+  {k: 'encuestas', n: 'Encuestas', d: 'Preguntas con opciones propias: fecha, menú, lugar.', i: 'encuesta'},
+  {k: 'mensajes', n: 'Mensajes y buenos deseos', d: 'Un muro de mensajes para todo el grupo.', i: 'mensaje'},
+  {k: 'canciones', n: 'Canciones sugeridas', d: 'Cada invitado sugiere canciones para la música.', i: 'musica'},
+  {k: 'fotos', n: 'Álbum de fotos', d: 'Los invitados comparten sus fotografías.', i: 'camara'},
+  {k: 'vestimenta_act', n: 'Código de vestimenta', d: 'Formal, suéter navideño, todo de blanco…', i: 'camisa'}
 ];
+const TIPOS_LLEVAR = {
+  llevar: {titulo: 'Alimentos y artículos', sub: 'Registre lo necesario y asigne a quién le corresponde. Los invitados también pueden inscribirse en lo que quede libre.', subInv: 'Inscríbase en lo que llevará para coordinar sin repeticiones.', form: 'llevar', q: 'lQue', c: 'lCuantos', campo: 'Artículo', ph: 'Bebidas, tamales, vajilla…', uno: 'artículo', plural: 'artículos', algo: 'algo que llevar', vacio: 'Aún no hay artículos registrados.', vacioInv: 'El organizador aún no registra artículos. Puede agregar lo que llevará.', suyos: 'Sus artículos'},
+  tarea: {titulo: 'Comisiones y tareas', sub: 'Registre las comisiones y asigne a los responsables. Los invitados también pueden inscribirse en las que tengan cupo.', subInv: 'Inscríbase en la comisión en la que desea colaborar.', form: 'tarea', q: 'tQue', c: 'tCuantos', campo: 'Comisión o tarea', ph: 'Decoración, música, juegos, limpieza…', uno: 'comisión', plural: 'comisiones', algo: 'alguna comisión', vacio: 'Aún no hay comisiones registradas.', vacioInv: 'El organizador aún no registra comisiones.', suyos: 'Sus comisiones'}
+};
 
 const I = {
   regalo: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/>',
@@ -59,6 +71,12 @@ const I = {
   abajo: '<path d="m6 9 6 6 6-6"/>',
   ojo: '<path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/>',
   x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  hoja: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>',
+  carro: '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>',
+  encuesta: '<path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/>',
+  tareas: '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+  musica: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  camisa: '<path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/>',
   plato: '<path d="m16 2-2.3 2.3a3 3 0 0 0 0 4.2l1.8 1.8a3 3 0 0 0 4.2 0L22 8"/><path d="M15 15 3.3 3.3a4.2 4.2 0 0 0 0 6l7.3 7.3c.7.7 2 .7 2.8 0L15 15Zm0 0 7 7"/><path d="m2.1 21.8 6.4-6.3"/><path d="m19 5-7 7"/>'
 };
 const ESTRELLA = '<path d="M12 1.5 13.9 10.1 22.5 12 13.9 13.9 12 22.5 10.1 13.9 1.5 12 10.1 10.1Z"/>';
@@ -85,6 +103,7 @@ let cajaReciente = false;
 let progBorrador = null;
 let filtroInv = '';
 let deseosSucio = false;
+let dietaSucio = false;
 
 function encabezados(extra = {}) {
   const h = {'apikey': SB_KEY, ...extra};
@@ -213,6 +232,11 @@ function fechaLarga(iso, mayus = true) {
   const h = d.toLocaleTimeString('es-GT', {hour: 'numeric', minute: '2-digit'});
   return (mayus ? f.charAt(0).toUpperCase() + f.slice(1) : f) + ', ' + h;
 }
+function fechaCorta(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('es-GT', {day: 'numeric', month: 'short'}) + ', ' + d.toLocaleTimeString('es-GT', {hour: 'numeric', minute: '2-digit'});
+}
 function aLocal(iso) {
   if (!iso) return '';
   const d = new Date(iso), p = n => String(n).padStart(2, '0');
@@ -225,7 +249,7 @@ const urlFoto = ruta => `${SB_URL}/storage/v1/object/public/${BUCKET}/${ruta.spl
 const primerNombre = n => String(n || '').split(' ')[0];
 
 function mensajeWhats(p, conv) {
-  return `Estimado(a) ${p.nombre}:\n\nLe invitamos a «${conv.nombre}».${conv.fecha ? `\n${fechaLarga(conv.fecha)}` : ''}${conv.lugar ? `\n${conv.lugar}` : ''}${conv.act.restaurante && conv.precio_plato ? `\nPrecio promedio por plato: ${quetzales(conv.precio_plato)}` : ''}\n\nSu código personal es: ${p.codigo}\n\nIngrese aquí para confirmar su asistencia y consultar los detalles:\n${enlaceBase()}#c=${p.codigo}${p.es_organizador ? '\n\nCon este mismo código también puede administrar el convivio como organizador.' : ''}\n\nEl código es personal; le rogamos no compartirlo.`;
+  return `Estimado(a) ${p.nombre}:\n\nLe invitamos a «${conv.nombre}».${conv.fecha ? `\n${fechaLarga(conv.fecha)}` : ''}${conv.lugar ? `\n${conv.lugar}` : ''}${conv.act.vestimenta && conv.vestimenta ? `\nVestimenta: ${conv.vestimenta}` : ''}${conv.act.restaurante && conv.precio_plato ? `\nPrecio promedio por plato: ${quetzales(conv.precio_plato)}` : ''}\n\nSu código personal es: ${p.codigo}\n\nIngrese aquí para confirmar su asistencia y consultar los detalles:\n${enlaceBase()}#c=${p.codigo}${p.es_organizador ? '\n\nCon este mismo código también puede administrar el convivio como organizador.' : ''}\n\nEl código es personal; le rogamos no compartirlo.`;
 }
 
 function guardarReciente(r) {
@@ -250,7 +274,7 @@ function pintarSesion() {
 function ir(vista, extra = {}) {
   detenerRelojes();
   E = {vista, codigo: extra.codigo || null, datos: extra.datos || null, tab: extra.tab || null};
-  cajaAbierta = false; progBorrador = null; filtroInv = ''; deseosSucio = false;
+  cajaAbierta = false; progBorrador = null; filtroInv = ''; deseosSucio = false; dietaSucio = false; filtros = {};
   if (vista === 'inicio' || vista === 'crear') aplicarTema('navidad');
   else aplicarTema(E.datos.convivio.tema, E.datos.convivio.color);
   if (vista === 'inicio') pintarInicio();
@@ -314,7 +338,7 @@ function formConvivio(v = {}) {
   const act = v.act || {asistencia: true, intercambio: true};
   const tema = v.tema || 'navidad';
   const color = v.color || '#2F5D8A';
-  const marcada = k => k === 'cuota_act' ? act.cuota : act[k];
+  const marcada = k => k === 'cuota_act' ? act.cuota : k === 'vestimenta_act' ? act.vestimenta : act[k];
   return `
     <section class="panel" style="margin-bottom:20px">
       <div class="paso-t"><b>1</b><h2>Los datos</h2></div>
@@ -342,6 +366,7 @@ function formConvivio(v = {}) {
       </div>
       <div class="dos extra">
         <div class="campo" id="campoPresu" ${act.intercambio ? '' : 'hidden'}><label for="cPresu">Presupuesto del regalo</label><div class="prefijo"><span>Q</span><input id="cPresu" type="number" inputmode="decimal" min="1" step="0.01" value="${esc(v.presupuesto ?? 100)}"></div></div>
+ <div class="campo" id="campoVestimenta" ${act.vestimenta ? '' : 'hidden'}><label for="cVestimenta">Código de vestimenta</label><input id="cVestimenta" maxlength="80" placeholder="Formal, suéter navideño, todo de blanco…" value="${esc(v.vestimenta || '')}"></div>
         <div class="campo" id="campoPlato" ${act.restaurante ? '' : 'hidden'}><label for="cPlato">Precio promedio por plato</label><div class="prefijo"><span>Q</span><input id="cPlato" type="number" inputmode="decimal" min="1" step="0.01" placeholder="120" value="${esc(v.precio_plato ?? '')}"></div></div>
         <div class="campo" id="campoCuota" ${act.cuota ? '' : 'hidden'}><label for="cCuota">Cooperación por persona</label><div class="prefijo"><span>Q</span><input id="cCuota" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(v.cuota && Number(v.cuota) > 0 ? v.cuota : 50)}"></div></div>
       </div>
@@ -363,6 +388,7 @@ function leerConvivio() {
   const p = n('#cPresu'); if (p && p > 0) d.presupuesto = String(p);
   const c = n('#cCuota'); if (c !== null) d.cuota = String(acts.has('cuota_act') ? c : 0);
   const pl = n('#cPlato'); d.precio_plato = acts.has('restaurante') && pl > 0 ? String(pl) : '';
+  d.vestimenta = acts.has('vestimenta_act') ? ($('#cVestimenta')?.value.trim() || '') : '';
   return d;
 }
 function marcarTema() {
@@ -399,6 +425,18 @@ function pintarCrear() {
   $('#cNombre').focus();
 }
 
+function nombreTab(partes, icono, solo) {
+  const p = partes.filter(x => x[0]);
+  if (!p.length) return null;
+  if (p.length === 1) return [p[0][2], p[0][1]];
+  return [icono, solo || p.map((x, i) => i ? x[1].toLowerCase() : x[1]).join(p.length === 2 ? ' y ' : ', ').replace(/, ([^,]+)$/, ' y $1')];
+}
+const tabComida = a => nombreTab([[a.llevar, 'Alimentos', 'comida'], [a.menu, 'Menú', 'plato'], [a.dieta, 'Restricciones', 'hoja']], 'comida', 'Comida');
+const tabEquipo = a => nombreTab([[a.tareas, 'Comisiones', 'tareas'], [a.transporte, 'Transporte', 'carro']], 'tareas');
+const tabJuegos = a => nombreTab([[a.rifa, 'Rifa', 'boleto'], [a.votos, 'Votaciones', 'trofeo'], [a.encuestas, 'Encuestas', 'encuesta']], 'trofeo', a.rifa && a.votos && a.encuestas ? 'Juegos y encuestas' : null);
+const tabMuro = a => nombreTab([[a.mensajes, 'Mensajes', 'mensaje'], [a.canciones, 'Canciones', 'musica']], 'mensaje');
+const pila = partes => `<div class="pila">${partes.filter(Boolean).join('')}</div>`;
+
 function pestanasDe() {
   const c = E.datos.convivio, a = c.act;
   if (E.vista === 'organizador') {
@@ -406,9 +444,11 @@ function pestanasDe() {
     return [
       ['invitados', 'gente', 'Invitados', inv.length],
       a.intercambio && ['intercambio', 'regalo', 'Intercambio'],
-      a.llevar && ['comida', 'comida', 'Alimentos', E.datos.llevar.length],
+      tabComida(a) && ['comida', tabComida(a)[0], tabComida(a)[1]],
+      tabEquipo(a) && ['equipo', tabEquipo(a)[0], tabEquipo(a)[1]],
       a.programa && ['programa', 'reloj', 'Programa'],
-      (a.rifa || a.votos) && ['juegos', 'trofeo', a.rifa && a.votos ? 'Rifa y votaciones' : a.rifa ? 'Rifa' : 'Votaciones'],
+      tabJuegos(a) && ['juegos', tabJuegos(a)[0], tabJuegos(a)[1]],
+      tabMuro(a) && ['muro', tabMuro(a)[0], tabMuro(a)[1]],
       a.fotos && ['fotos', 'camara', 'Fotografías', E.datos.fotos.length],
       ['ajustes', 'ajustes', 'Ajustes']
     ].filter(Boolean);
@@ -416,8 +456,10 @@ function pestanasDe() {
   return [
     ['inicio', 'casa', 'Inicio'],
     a.intercambio && ['intercambio', 'regalo', 'Intercambio'],
-    a.llevar && ['comida', 'comida', 'Alimentos'],
-    (a.rifa || a.votos) && ['juegos', 'trofeo', a.rifa && a.votos ? 'Rifa y votaciones' : a.rifa ? 'Rifa' : 'Votaciones'],
+    tabComida(a) && ['comida', tabComida(a)[0], tabComida(a)[1]],
+    tabEquipo(a) && ['equipo', tabEquipo(a)[0], tabEquipo(a)[1]],
+    tabJuegos(a) && ['juegos', tabJuegos(a)[0], tabJuegos(a)[1]],
+    tabMuro(a) && ['muro', tabMuro(a)[0], tabMuro(a)[1]],
     a.fotos && ['fotos', 'camara', 'Fotografías', E.datos.fotos.length]
   ].filter(Boolean);
 }
@@ -444,6 +486,7 @@ function pintarEncabezado() {
           ${c.fecha ? `<span>${ic('fecha', 's')}${esc(fechaLarga(c.fecha))}</span>` : ''}
           ${c.lugar ? `<span>${ic('lugar', 's')}${esc(c.lugar)}</span>` : ''}
           ${c.act.intercambio ? `<span>${ic('regalo', 's')}Regalo de ${quetzales(c.presupuesto)}</span>` : ''}
+          ${c.act.vestimenta && c.vestimenta ? `<span title="Código de vestimenta">${ic('camisa', 's')}${esc(c.vestimenta)}</span>` : ''}
           ${c.act.restaurante && c.precio_plato ? `<span title="Precio promedio por plato en el restaurante">${ic('plato', 's')}Plato promedio ${quetzales(c.precio_plato)}</span>` : ''}
         </div>
       </div>
@@ -496,7 +539,7 @@ async function refrescar(forzar = false) {
     if (tabs !== tabsAntes) { pintarPanel(); return; }
     document.querySelectorAll('.pestana').forEach(b => { const t = pestanasDe().find(x => x[0] === b.dataset.tab); const n = b.querySelector('.num'); if (n && t) { n.textContent = t[3]; n.hidden = !t[3]; } });
     pintarEncabezado();
-    if (!escribiendo && !deseosSucio && !progBorrador && E.tab !== 'ajustes') pintarContenido();
+    if (!escribiendo && !deseosSucio && !dietaSucio && !progBorrador && E.tab !== 'ajustes') pintarContenido();
     pintarSesion();
   } catch (e) {
     if (/no válido|No encontramos/.test(e.message) && E.vista === 'organizador' && E.datos.yo) {
@@ -524,6 +567,215 @@ function resumenAsistencia(lista) {
     talvez: lista.filter(i => i.asistencia === 'tal_vez').length,
     falta: lista.filter(i => !i.asistencia).length
   };
+}
+
+function programaSorteoOrg(c, n) {
+  const pasada = c.sorteo_programado && new Date(c.sorteo_programado) <= Date.now();
+  return `<div class="programa-sorteo">
+    ${c.sorteo_programado ? `<div class="${pasada ? 'estado-falta' : 'estado-ok'}">${ic('reloj', 's')}${pasada ? `La fecha programada ya pasó, pero hay ${n} ${n === 1 ? 'participante' : 'participantes'}. El sorteo se realizará en cuanto haya al menos 3.` : `Sorteo automático: ${esc(fechaLarga(c.sorteo_programado, false))}`}</div>` : ''}
+    <form class="agregar" data-form="programar" style="margin-top:14px">
+      <div><label for="sFecha">${c.sorteo_programado ? 'Cambiar la fecha del sorteo automático' : 'Programar el sorteo para una fecha'}</label><input id="sFecha" type="datetime-local" value="${esc(aLocal(c.sorteo_programado))}"></div>
+      <button class="btn sec" type="submit" title="A esa fecha y hora el sistema realiza el sorteo automáticamente">${ic('reloj', 's')}${c.sorteo_programado ? 'Cambiar' : 'Programar'}</button>
+    </form>
+    <p class="ayuda">A esa hora el sistema realiza el sorteo solo, sin que usted intervenga. Hasta entonces, los invitados pueden incorporarse o retirarse.${c.sorteo_programado ? ' <button class="enlace" data-acc="sorteo-cancelar-prog" title="Quitar la fecha programada">Cancelar la programación</button>' : ''}</p>
+  </div>`;
+}
+
+function llevarOrg(tipo) {
+    const T = TIPOS_LLEVAR[tipo];
+    const ll = E.datos.llevar.filter(l => l.tipo === tipo), inv = E.datos.invitados;
+    const porPersona = inv.map(p => ({p, cosas: ll.filter(l => l.quienes.some(q => q.id === p.id))}));
+    const con = porPersona.filter(x => x.cosas.length), sin = porPersona.filter(x => !x.cosas.length);
+    return `<div class="rejilla"><div class="columna"><section class="panel">
+      <div class="titulo-sec"><div><h2>${T.titulo}</h2><p>${T.sub}</p></div></div>
+      <form class="agregar tres" data-form="${T.form}">
+        <div><label for="${T.q}">${T.campo}</label><input id="${T.q}" maxlength="80" placeholder="${T.ph}"></div>
+        <div><label for="${T.c}">Cupo</label><input id="${T.c}" type="number" min="1" max="50" value="1" title="Cuántas personas pueden inscribirse"></div>
+        <button class="btn prim" type="submit" title="Agregar a la lista">${ic('mas')}Agregar</button>
+      </form>
+      <p class="ayuda" style="margin-bottom:18px">El cupo indica cuántas personas pueden inscribirse en cada ${T.uno}.</p>
+      <ul class="cosas">${ll.length ? ll.map(l => { const libres = inv.filter(p => !l.quienes.some(q => q.id === p.id)); return `<li class="cosa ${l.quienes.length >= l.cuantos ? 'completa' : ''}" data-id="${l.id}"><div style="min-width:0"><div class="que">${esc(l.que)}<span class="cupo">${l.quienes.length}/${l.cuantos}</span></div>
+        <div class="asignados">${l.quienes.map(q => `<span class="insignia ${q.asignado ? 'si' : ''}" title="${q.asignado ? 'Asignado por el organizador' : 'Se inscribió por su cuenta'}">${esc(q.nombre)}<button class="quitar-chip" data-acc="desasignar" data-inv="${q.id}" title="Quitar a ${esc(q.nombre)} de «${esc(l.que)}»" aria-label="Quitar a ${esc(q.nombre)} de ${esc(l.que)}">${ic('x', 's')}</button></span>`).join('')}
+          ${libres.length ? `<label class="sr" for="as-${l.id}">Asignar ${esc(l.que)} a</label><select id="as-${l.id}" class="asignar" data-cambio="asignar" title="Elegir a quién le corresponde «${esc(l.que)}»"><option value="">Asignar a…</option>${libres.map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join('')}</select>` : ''}
+          ${!l.quienes.length && !inv.length ? '<span class="ayuda" style="margin:0">Agregue invitados para poder asignarlo.</span>' : ''}</div></div>
+        <button class="icono" data-acc="llevar-quitar" title="Quitar «${esc(l.que)}» de la lista" aria-label="Quitar ${esc(l.que)}">${ic('basura')}</button></li>`; }).join('') : `<li class="vacio">${T.vacio}</li>`}</ul>
+    </section></div>
+    <div class="columna"><section class="panel"><div class="titulo-sec"><h2>Resumen</h2></div>
+      <div class="cifras"><div><b>${ll.length}</b><span>${T.plural}</span></div><div><b>${ll.filter(l => l.quienes.length >= l.cuantos).length}</b><span>cubiertos</span></div><div><b>${ll.filter(l => !l.quienes.length).length}</b><span>sin asignar</span></div></div>
+    </section>
+    <section class="panel"><div class="titulo-sec"><div><h2>Por persona</h2><p>${con.length} de ${inv.length} ${inv.length === 1 ? 'invitado tiene' : 'invitados tienen'} ${T.algo}.</p></div></div>
+      ${con.length ? `<ul class="por-persona">${con.map(x => `<li><b>${esc(x.p.nombre)}</b><span>${x.cosas.map(l => esc(l.que)).join(', ')}</span></li>`).join('')}</ul>` : '<p class="vacio">Aún no hay asignaciones.</p>'}
+      ${sin.length && con.length ? `<p class="ayuda" style="margin-top:14px">Sin ${T.uno}: ${sin.map(x => esc(x.p.nombre)).join(', ')}.</p>` : ''}
+    </section></div></div>`;
+}
+
+function llevarInv(tipo) {
+    const T = TIPOS_LLEVAR[tipo];
+    const {yo} = E.datos, ll = E.datos.llevar.filter(l => l.tipo === tipo);
+    const mias = ll.filter(l => l.quienes.some(q => q.id === yo.id));
+    return `<div class="rejilla"><div class="columna"><section class="panel">
+      <div class="titulo-sec"><div><h2>${T.titulo}</h2><p>${T.subInv}</p></div></div>
+      <ul class="cosas">${ll.length ? ll.map(l => { const mia = l.quienes.some(q => q.id === yo.id), llena = l.quienes.length >= l.cuantos; const asignada = l.quienes.some(q => q.id === yo.id && q.asignado); return `<li class="cosa ${llena ? 'completa' : ''} ${mia ? 'mia' : ''}" data-id="${l.id}"><div style="min-width:0"><div class="que">${esc(l.que)}<span class="cupo">${l.quienes.length}/${l.cuantos}</span></div><div class="quienes">${l.quienes.length ? 'A cargo de: ' + l.quienes.map(q => q.id === yo.id ? '<b>usted</b>' : esc(q.nombre)).join(', ') : 'Sin inscritos'}</div></div>${asignada ? `<span class="insignia oro" title="El organizador se lo asignó">${ic('llave', 's')}Asignado</span>` : mia ? `<button class="btn sec chico" data-acc="llevar" data-v="0" title="Cancelar su inscripción">Cancelar</button>` : llena ? `<span class="insignia si">${ic('check', 's')}Cubierto</span>` : `<button class="btn prim chico" data-acc="llevar" data-v="1" title="Inscribirse en ${esc(l.que)}">${ic('check', 's')}Me inscribo</button>`}</li>`; }).join('') : `<li class="vacio">${T.vacioInv}</li>`}</ul>
+    </section></div>
+    <div class="columna">
+      ${tipo === 'llevar' ? `<section class="panel"><div class="titulo-sec"><div><h2>Agregar un artículo</h2><p>Si lo que llevará no está en la lista, puede agregarlo.</p></div></div>
+        <form class="agregar" data-form="llevar-mio"><div><label for="lMio">Artículo</label><input id="lMio" maxlength="80" placeholder="Postre, hielo, servilletas…"></div><button class="btn prim" type="submit" title="Agregar e inscribirse">${ic('mas')}Agregar</button></form>
+      </section>` : ''}
+      <section class="panel"><div class="titulo-sec"><h2>${T.suyos}</h2></div>${mias.length ? `<ul class="deseos-amigo">${mias.map(l => `<li>${estrella()}<span>${esc(l.que)}${l.quienes.some(q => q.id === yo.id && q.asignado) ? ' <small class="ayuda" style="display:inline">(asignado por el organizador)</small>' : ''}</span></li>`).join('')}</ul>` : '<p class="ayuda" style="margin:0">Aún no tiene inscripciones.</p>'}</section>
+    </div></div>`;
+}
+
+let filtros = {};
+function buscador(clave, total, texto) {
+  if (total <= 12) return '';
+  return `<div class="buscar">${ic('lupa', 's')}<label class="sr" for="f2-${clave}">${texto}</label><input id="f2-${clave}" data-cambio="filtro2" data-f="${clave}" placeholder="${texto}" value="${esc(filtros[clave] || '')}"></div>`;
+}
+const filtrar = (clave, lista, campo = x => x.nombre) => { const f = (filtros[clave] || '').trim().toLowerCase(); return f ? lista.filter(x => campo(x).toLowerCase().includes(f)) : lista; };
+
+function menuOrg() {
+  const {menu, invitados: inv} = E.datos;
+  const eligieron = inv.filter(i => i.plato_id).length;
+  const vis = filtrar('menu', inv);
+  return `<div class="rejilla"><div class="columna"><section class="panel">
+    <div class="titulo-sec"><div><h2>Menú</h2><p>Registre los platos disponibles. Cada invitado elige el suyo; también puede asignarlo usted.</p></div></div>
+    <form class="agregar tres" data-form="plato">
+      <div><label for="mPlato">Plato</label><input id="mPlato" maxlength="80" placeholder="Pollo en crema, pasta, ensalada…"></div>
+      <div><label for="mPrecio">Precio</label><div class="prefijo"><span>Q</span><input id="mPrecio" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Opcional"></div></div>
+      <button class="btn prim" type="submit" title="Agregar el plato al menú">${ic('mas')}Agregar</button>
+    </form>
+    <ul class="cosas" style="margin-top:18px">${menu.length ? menu.map(m => { const quienes = inv.filter(i => i.plato_id === m.id); return `<li class="cosa" data-id="${m.id}"><div style="min-width:0"><div class="que">${esc(m.plato)}${m.precio ? `<span class="cupo">${quetzales(m.precio)}</span>` : ''}</div><div class="quienes">${quienes.length ? `${quienes.length} ${quienes.length === 1 ? 'persona' : 'personas'}: ${quienes.map(q => esc(q.nombre)).join(', ')}` : 'Nadie lo ha elegido'}</div></div><button class="icono" data-acc="plato-quitar" title="Quitar «${esc(m.plato)}» del menú" aria-label="Quitar ${esc(m.plato)}">${ic('basura')}</button></li>`; }).join('') : '<li class="vacio">Aún no hay platos en el menú.</li>'}</ul>
+  </section></div>
+  <div class="columna"><section class="panel">
+    <div class="titulo-sec"><div><h2>Elección por invitado</h2><p>${eligieron} de ${inv.length} ya eligieron.</p></div></div>
+    ${buscador('menu', inv.length, 'Buscar invitado')}
+    ${menu.length && inv.length ? `<ul class="por-persona">${vis.map(i => `<li class="eleccion" data-id="${i.id}"><b>${esc(i.nombre)}</b><label class="sr" for="pl-${i.id}">Plato de ${esc(i.nombre)}</label><select id="pl-${i.id}" class="asignar" data-cambio="plato-de" title="Elegir el plato de ${esc(i.nombre)}"><option value="">Sin elegir</option>${menu.map(m => `<option value="${m.id}" ${i.plato_id === m.id ? 'selected' : ''}>${esc(m.plato)}</option>`).join('')}</select></li>`).join('') || `<li class="vacio">No hay resultados para «${esc(filtros.menu)}».</li>`}</ul>` : `<p class="vacio">${menu.length ? 'Aún no hay invitados.' : 'Agregue platos para asignarlos.'}</p>`}
+  </section></div></div>`;
+}
+
+function dietaOrg() {
+  const inv = E.datos.invitados, con = inv.filter(i => i.dieta);
+  const vis = filtrar('dieta', con, i => i.nombre + ' ' + i.dieta);
+  return `<section class="panel"><div class="titulo-sec"><div><h2>Restricciones alimentarias</h2><p>${con.length ? `${con.length} de ${inv.length} ${con.length === 1 ? 'invitado indicó' : 'invitados indicaron'} alguna restricción.` : 'Cada invitado indica sus alergias o preferencias desde su teléfono.'}</p></div></div>
+    ${buscador('dieta', con.length, 'Buscar por nombre o restricción')}
+    ${con.length ? `<ul class="por-persona">${vis.map(i => `<li><b>${esc(i.nombre)}</b><span>${esc(i.dieta)}</span></li>`).join('') || `<li class="vacio">No hay resultados para «${esc(filtros.dieta)}».</li>`}</ul>` : '<p class="vacio">Aún no hay restricciones registradas.</p>'}
+  </section>`;
+}
+
+function viajeHTML(t, yo) {
+  const libres = t.lugares - t.pasajeros.length, mio = yo && t.conductor_id === yo.id, voy = yo && t.pasajeros.some(p => p.id === yo.id);
+  let accion = '';
+  if (!yo) accion = `<button class="icono" data-acc="viaje-quitar" title="Retirar el vehículo de ${esc(t.conductor)}" aria-label="Retirar el vehículo de ${esc(t.conductor)}">${ic('basura')}</button>`;
+  else if (voy) accion = `<button class="btn sec chico" data-acc="viaje-unirse" data-v="0" title="Liberar su lugar en este vehículo">Liberar lugar</button>`;
+  else if (!mio && libres > 0 && !E.datos.viajes.some(x => x.conductor_id === yo.id)) accion = `<button class="btn prim chico" data-acc="viaje-unirse" data-v="1" title="Reservar un lugar con ${esc(t.conductor)}">${ic('check', 's')}Reservar lugar</button>`;
+  else if (!mio && libres <= 0) accion = `<span class="insignia si">${ic('check', 's')}Completo</span>`;
+  return `<li class="cosa ${libres <= 0 ? 'completa' : ''} ${mio || voy ? 'mia' : ''}" data-id="${t.id}"><div style="min-width:0"><div class="que">${ic('carro', 's')} ${mio ? 'Su vehículo' : esc(t.conductor)}<span class="cupo">${t.pasajeros.length}/${t.lugares}</span></div>
+    ${t.salida ? `<div class="quienes">Sale de: ${esc(t.salida)}</div>` : ''}
+    <div class="quienes">${t.pasajeros.length ? 'Pasajeros: ' + t.pasajeros.map(p => yo && p.id === yo.id ? '<b>usted</b>' : esc(p.nombre)).join(', ') : `${libres} ${libres === 1 ? 'lugar disponible' : 'lugares disponibles'}`}</div></div>${accion}</li>`;
+}
+
+function transporteOrg() {
+  const {viajes, invitados: inv} = E.datos;
+  const resueltos = new Set(viajes.flatMap(t => [t.conductor_id, ...t.pasajeros.map(p => p.id)]));
+  const sin = inv.filter(i => !resueltos.has(i.id) && i.asistencia !== 'no');
+  const lugares = viajes.reduce((n, t) => n + t.lugares, 0), ocupados = viajes.reduce((n, t) => n + t.pasajeros.length, 0);
+  return `<div class="rejilla"><div class="columna"><section class="panel">
+    <div class="titulo-sec"><div><h2>Transporte compartido</h2><p>Los invitados con vehículo ofrecen lugares desde su teléfono y los demás los reservan.</p></div></div>
+    <ul class="cosas">${viajes.length ? viajes.map(t => viajeHTML(t, null)).join('') : '<li class="vacio">Aún nadie ofrece lugares en su vehículo.</li>'}</ul>
+  </section></div>
+  <div class="columna"><section class="panel"><div class="titulo-sec"><h2>Resumen</h2></div>
+    <div class="cifras"><div><b>${viajes.length}</b><span>vehículos</span></div><div><b>${lugares - ocupados}</b><span>lugares libres</span></div><div><b>${ocupados}</b><span>reservados</span></div></div>
+    ${sin.length && viajes.length ? `<p class="ayuda" style="margin-top:14px">Sin transporte registrado: ${sin.map(i => esc(i.nombre)).join(', ')}.</p>` : ''}
+  </section></div></div>`;
+}
+
+function mensajesHTML(org) {
+  const {mensajes} = E.datos, yo = org ? null : E.datos.yo;
+  return `<div class="rejilla"><div class="columna"><section class="panel">
+    <div class="titulo-sec"><div><h2>Mensajes y buenos deseos</h2><p>${org ? 'Los mensajes de la organización aparecen destacados. Puede retirar los que no correspondan.' : 'Deje un mensaje para todo el grupo.'}</p></div></div>
+    <form data-form="${org ? 'mensaje-org' : 'mensaje'}" class="muro-form"><label for="msjTxt">${org ? 'Mensaje de la organización' : 'Su mensaje'}</label><textarea id="msjTxt" data-crece rows="2" maxlength="500" placeholder="${org ? 'Les damos la bienvenida…' : 'Gracias por la invitación…'}"></textarea><div class="acciones" style="justify-content:flex-end;margin-top:10px"><button class="btn prim" type="submit" title="Publicar el mensaje">${ic('mensaje', 's')}Publicar</button></div></form>
+    <ul class="muro">${mensajes.length ? mensajes.map(m => { const propio = yo && m.autor_id === yo.id; return `<li class="${m.autor ? '' : 'oficial'}" data-id="${m.id}"><p>${esc(m.texto)}</p><div class="pie-msj"><span>${m.autor ? esc(m.autor) : 'Organización'} · ${esc(fechaCorta(m.creado_en))}</span>${org || propio ? `<button class="icono" data-acc="mensaje-quitar" title="Retirar este mensaje" aria-label="Retirar mensaje">${ic('basura', 's')}</button>` : ''}</div></li>`; }).join('') : '<li class="vacio">Aún no hay mensajes.</li>'}</ul>
+  </section></div></div>`;
+}
+
+function cancionesHTML(org) {
+  const {canciones} = E.datos, yo = org ? null : E.datos.yo;
+  const vis = filtrar('canciones', canciones, k => k.cancion + ' ' + (k.autor || ''));
+  return `<section class="panel">
+    <div class="titulo-sec"><div><h2>Canciones sugeridas</h2><p>${org ? `${canciones.length} ${canciones.length === 1 ? 'sugerencia' : 'sugerencias'}. Puede copiar la lista para armar la música.` : 'Sugiera canciones para la música del convivio.'}</p></div>${org && canciones.length ? `<button class="btn salida chico" data-acc="copiar-canciones" title="Copiar la lista de canciones">${ic('copiar', 's')}Copiar lista</button>` : ''}</div>
+    ${org ? '' : `<form class="agregar" data-form="cancion"><div><label for="kTxt">Canción y artista</label><input id="kTxt" maxlength="120" placeholder="Feliz Navidad · José Feliciano"></div><button class="btn prim" type="submit" title="Agregar la canción">${ic('mas')}Agregar</button></form>`}
+    ${buscador('canciones', canciones.length, 'Buscar canción')}
+    <ul class="cosas" style="margin-top:14px">${canciones.length ? vis.map(k => { const propia = yo && k.autor_id === yo.id; return `<li class="cosa ${propia ? 'mia' : ''}" data-id="${k.id}"><div style="min-width:0"><div class="que">${ic('musica', 's')} ${esc(k.cancion)}</div><div class="quienes">${propia ? 'Su sugerencia' : 'Sugerida por ' + esc(k.autor || 'un invitado')}</div></div>${org || propia ? `<button class="icono" data-acc="cancion-quitar" title="Retirar «${esc(k.cancion)}»" aria-label="Retirar ${esc(k.cancion)}">${ic('basura')}</button>` : ''}</li>`; }).join('') || `<li class="vacio">No hay resultados para «${esc(filtros.canciones)}».</li>` : '<li class="vacio">Aún no hay canciones sugeridas.</li>'}</ul>
+  </section>`;
+}
+
+function barrasEncuesta(e) {
+  const max = Math.max(0, ...e.conteo);
+  return `<div class="resultados">${e.opciones.map((o, i) => `<div class="resultado ${max && e.conteo[i] === max ? 'gana' : ''}"><b>${max && e.conteo[i] === max ? estrella() + ' ' : ''}${esc(o)}</b><span>${e.conteo[i]}</span><span class="riel"><i style="width:${e.total ? e.conteo[i] / e.total * 100 : 0}%"></i></span></div>`).join('')}</div>`;
+}
+
+function encuestasOrg() {
+  return `<section class="panel">
+    <div class="titulo-sec"><div><h2>Encuestas</h2><p>Escriba la pregunta y las opciones. Los invitados responden desde su teléfono y ven los resultados al votar.</p></div></div>
+    <form data-form="encuesta" class="muro-form">
+      <div class="campo"><label for="eTxt">Pregunta</label><input id="eTxt" maxlength="120" placeholder="¿Qué día prefieren?"></div>
+      <div class="campo"><label for="eOps">Opciones <span style="font-weight:500;color:var(--tenue)">(una por línea, de 2 a 10)</span></label><textarea id="eOps" data-crece rows="3" maxlength="900" placeholder="Viernes&#10;Sábado&#10;Domingo"></textarea></div>
+      <div class="acciones" style="justify-content:flex-end;margin-top:0"><button class="btn prim" type="submit" title="Crear la encuesta">${ic('mas', 's')}Crear encuesta</button></div>
+    </form>
+    <div style="display:grid;gap:12px;margin-top:18px">${E.datos.encuestas.length ? E.datos.encuestas.map(e => `<div class="votacion" data-id="${e.id}">
+      <h3>${esc(e.pregunta)} <span class="insignia ${e.estado === 'abierta' ? 'si' : ''}">${ic(e.estado === 'abierta' ? 'abierto' : 'candado', 's')}${e.estado === 'abierta' ? 'Abierta' : 'Cerrada'}</span></h3>
+      <p class="ayuda">${e.total} ${e.total === 1 ? 'respuesta' : 'respuestas'}</p>
+      ${barrasEncuesta(e)}
+      <div class="acciones"><button class="btn ${e.estado === 'abierta' ? 'acen' : 'sec'} chico" data-acc="encuesta-estado" title="${e.estado === 'abierta' ? 'Cerrar la encuesta' : 'Reabrir la encuesta'}">${ic(e.estado === 'abierta' ? 'candado' : 'abierto', 's')}${e.estado === 'abierta' ? 'Cerrar' : 'Reabrir'}</button><button class="btn peligro chico" data-acc="encuesta-quitar" title="Eliminar esta encuesta">${ic('basura', 's')}Eliminar</button></div>
+    </div>`).join('') : '<p class="vacio">Aún no hay encuestas.</p>'}</div>
+  </section>`;
+}
+
+function encuestasInv() {
+  const mis = E.datos.mis_encuestas || {};
+  return `<section class="panel">
+    <div class="titulo-sec"><div><h2>Encuestas</h2><p>Seleccione una opción. Puede cambiar su respuesta mientras la encuesta esté abierta.</p></div></div>
+    <div style="display:grid;gap:12px">${E.datos.encuestas.length ? E.datos.encuestas.map(e => { const mi = mis[e.id]; return `<div class="votacion" data-id="${e.id}">
+      <h3>${esc(e.pregunta)} <span class="insignia ${e.estado === 'abierta' ? 'si' : ''}">${e.estado === 'abierta' ? 'Abierta' : 'Cerrada'}</span></h3>
+      ${e.estado === 'abierta' ? `<div class="opciones-voto">${e.opciones.map((o, i) => `<button data-acc="encuesta-votar" data-op="${i}" aria-pressed="${mi === i}" title="Responder «${esc(o)}»">${esc(o)}</button>`).join('')}</div>` : ''}
+      ${mi !== undefined || e.estado !== 'abierta' ? barrasEncuesta(e) : '<p class="ayuda">Los resultados se muestran después de responder.</p>'}
+    </div>`; }).join('') : '<p class="vacio">Aún no hay encuestas.</p>'}</div>
+  </section>`;
+}
+
+function menuInv() {
+  const {menu, yo} = E.datos;
+  return `<section class="panel">
+    <div class="titulo-sec"><div><h2>Menú</h2><p>${yo.plato_id ? 'Su elección quedó registrada. Puede cambiarla.' : 'Elija su plato.'}</p></div></div>
+    ${menu.length ? `<div class="platos">${menu.map(m => `<button class="plato" data-acc="elegir-plato" data-plato="${m.id}" aria-pressed="${yo.plato_id === m.id}" title="${yo.plato_id === m.id ? 'Quitar su elección' : 'Elegir ' + esc(m.plato)}"><b>${esc(m.plato)}</b>${m.precio ? `<span>${quetzales(m.precio)}</span>` : ''}${yo.plato_id === m.id ? `<span class="marca-plato">${ic('check', 's')}Su elección</span>` : ''}</button>`).join('')}</div>` : '<p class="vacio">El organizador aún no publica el menú.</p>'}
+  </section>`;
+}
+
+const DIETAS = ['Vegetariano', 'Vegano', 'Sin gluten', 'Sin lactosa', 'Alergia a mariscos', 'Alergia a nueces', 'Sin cerdo', 'Diabético'];
+function dietaInv() {
+  const yo = E.datos.yo;
+  return `<section class="panel">
+    <div class="titulo-sec"><div><h2>Restricciones alimentarias</h2><p>Indique alergias o preferencias. Solo las verá el organizador.</p></div></div>
+    <div class="chips" style="gap:8px;margin-bottom:12px">${DIETAS.map(d => `<button class="insignia" data-acc="dieta-chip" data-d="${d}" title="Agregar «${d}»">${ic('mas', 's')}${d}</button>`).join('')}</div>
+    <form class="agregar" data-form="dieta"><div><label for="dTxt">Sus restricciones</label><input id="dTxt" maxlength="200" data-cambio="dieta" placeholder="Ninguna" value="${esc(yo.dieta || '')}"></div><button class="btn prim" type="submit" title="Guardar sus restricciones">${ic('check', 's')}Guardar</button></form>
+    <p class="ayuda" id="dEstado">${dietaSucio ? 'Cambios sin guardar' : yo.dieta ? 'Guardado.' : ''}</p>
+  </section>`;
+}
+
+function transporteInv() {
+  const {viajes, yo} = E.datos;
+  const mio = viajes.find(t => t.conductor_id === yo.id), voy = viajes.find(t => t.pasajeros.some(p => p.id === yo.id));
+  return `<div class="rejilla"><div class="columna"><section class="panel">
+    <div class="titulo-sec"><div><h2>Transporte compartido</h2><p>${voy ? `Tiene un lugar con ${esc(voy.conductor)}.` : mio ? 'Usted ofrece su vehículo.' : 'Reserve un lugar o, si lleva vehículo, ofrezca los suyos.'}</p></div></div>
+    <ul class="cosas">${viajes.length ? viajes.map(t => viajeHTML(t, yo)).join('') : '<li class="vacio">Aún nadie ofrece lugares.</li>'}</ul>
+  </section></div>
+  <div class="columna"><section class="panel">
+    <div class="titulo-sec"><div><h2>${mio ? 'Su vehículo' : 'Ofrezco mi vehículo'}</h2><p>${voy ? 'Para ofrecer el suyo, primero libere su lugar.' : 'Indique cuántos lugares tiene disponibles y de dónde sale.'}</p></div></div>
+    ${voy ? '' : `<form data-form="viaje" class="muro-form">
+      <div class="dos"><div class="campo"><label for="vLug">Lugares disponibles</label><input id="vLug" type="number" min="1" max="12" value="${mio ? mio.lugares : 3}"></div>
+      <div class="campo"><label for="vSal">Sale de <span style="font-weight:500;color:var(--tenue)">(opcional)</span></label><input id="vSal" maxlength="120" placeholder="Parque central, 6:30 p. m." value="${esc(mio?.salida || '')}"></div></div>
+      <div class="acciones" style="justify-content:flex-end;margin-top:0">${mio ? `<button type="button" class="btn peligro" data-acc="viaje-retirar" title="Dejar de ofrecer su vehículo">Retirar</button>` : ''}<button class="btn prim" type="submit" title="${mio ? 'Guardar los cambios' : 'Ofrecer lugares en su vehículo'}">${ic(mio ? 'check' : 'carro', 's')}${mio ? 'Guardar' : 'Ofrecer lugares'}</button></div>
+    </form>`}
+  </section></div></div>`;
 }
 
 const VISTAS_ORG = {
@@ -587,6 +839,10 @@ const VISTAS_ORG = {
     </div>`;
   },
 
+  comida() { return pila([E.datos.convivio.act.llevar && llevarOrg('llevar'), E.datos.convivio.act.menu && menuOrg(), E.datos.convivio.act.dieta && dietaOrg()]); },
+  equipo() { return pila([E.datos.convivio.act.tareas && llevarOrg('tarea'), E.datos.convivio.act.transporte && transporteOrg()]); },
+  muro() { return pila([E.datos.convivio.act.mensajes && mensajesHTML(true), E.datos.convivio.act.canciones && cancionesHTML(true)]); },
+
   intercambio() {
     const {convivio: c, invitados: inv} = E.datos;
     const en = inv.filter(i => i.en_intercambio);
@@ -600,6 +856,7 @@ const VISTAS_ORG = {
           ${c.sorteado
             ? `<div class="estado-ok">${ic('check', 's')}Sorteo hecho el ${esc(fechaLarga(c.sorteado_en, false))}</div>`
             : `<div class="estado-falta">${faltan ? `Se requiere${faltan === 1 ? '' : 'n'} ${faltan === 1 ? '1 participante más' : faltan + ' participantes más'} para realizar el sorteo.` : 'Cuando estén todos los participantes, realice el sorteo. Los invitados pueden incorporarse o retirarse hasta ese momento.'}</div>`}
+          ${!c.sorteado ? programaSorteoOrg(c, en.length) : ''}
           <div class="acciones">
             ${c.sorteado
               ? `<button class="btn sec" data-acc="sortear" data-otra="1" title="Realizar un nuevo sorteo; el anterior se anula">${ic('sortear', 's')}Volver a sortear</button><button class="btn peligro" data-acc="deshacer-sorteo" title="Anular el sorteo para modificar a los participantes">Anular sorteo</button>`
@@ -622,32 +879,6 @@ const VISTAS_ORG = {
     </div>`;
   },
 
-  comida() {
-    const ll = E.datos.llevar, inv = E.datos.invitados;
-    const porPersona = inv.map(p => ({p, cosas: ll.filter(l => l.quienes.some(q => q.id === p.id))}));
-    const con = porPersona.filter(x => x.cosas.length), sin = porPersona.filter(x => !x.cosas.length);
-    return `<div class="rejilla"><div class="columna"><section class="panel">
-      <div class="titulo-sec"><div><h2>Alimentos y artículos</h2><p>Registre lo necesario y asigne a quién le corresponde. Los invitados también pueden inscribirse en lo que quede libre.</p></div></div>
-      <form class="agregar tres" data-form="llevar">
-        <div><label for="lQue">Artículo</label><input id="lQue" maxlength="80" placeholder="Bebidas, tamales, vajilla…"></div>
-        <div><label for="lCuantos">Cupo</label><input id="lCuantos" type="number" min="1" max="50" value="1" title="Cuántas personas pueden inscribirse"></div>
-        <button class="btn prim" type="submit" title="Agregar a la lista">${ic('mas')}Agregar</button>
-      </form>
-      <p class="ayuda" style="margin-bottom:18px">El cupo indica cuántas personas pueden inscribirse en cada artículo.</p>
-      <ul class="cosas">${ll.length ? ll.map(l => { const libres = inv.filter(p => !l.quienes.some(q => q.id === p.id)); return `<li class="cosa ${l.quienes.length >= l.cuantos ? 'completa' : ''}" data-id="${l.id}"><div style="min-width:0"><div class="que">${esc(l.que)}<span class="cupo">${l.quienes.length}/${l.cuantos}</span></div>
-        <div class="asignados">${l.quienes.map(q => `<span class="insignia ${q.asignado ? 'si' : ''}" title="${q.asignado ? 'Asignado por el organizador' : 'Se inscribió por su cuenta'}">${esc(q.nombre)}<button class="quitar-chip" data-acc="desasignar" data-inv="${q.id}" title="Quitar a ${esc(q.nombre)} de «${esc(l.que)}»" aria-label="Quitar a ${esc(q.nombre)} de ${esc(l.que)}">${ic('x', 's')}</button></span>`).join('')}
-          ${libres.length ? `<label class="sr" for="as-${l.id}">Asignar ${esc(l.que)} a</label><select id="as-${l.id}" class="asignar" data-cambio="asignar" title="Elegir quién lleva «${esc(l.que)}»"><option value="">Asignar a…</option>${libres.map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join('')}</select>` : ''}
-          ${!l.quienes.length && !inv.length ? '<span class="ayuda" style="margin:0">Agregue invitados para poder asignarlo.</span>' : ''}</div></div>
-        <button class="icono" data-acc="llevar-quitar" title="Quitar «${esc(l.que)}» de la lista" aria-label="Quitar ${esc(l.que)}">${ic('basura')}</button></li>`; }).join('') : '<li class="vacio">Aún no hay artículos registrados.</li>'}</ul>
-    </section></div>
-    <div class="columna"><section class="panel"><div class="titulo-sec"><h2>Resumen</h2></div>
-      <div class="cifras"><div><b>${ll.length}</b><span>artículos</span></div><div><b>${ll.filter(l => l.quienes.length >= l.cuantos).length}</b><span>cubiertos</span></div><div><b>${ll.filter(l => !l.quienes.length).length}</b><span>sin asignar</span></div></div>
-    </section>
-    <section class="panel"><div class="titulo-sec"><div><h2>Por persona</h2><p>${con.length} de ${inv.length} ${inv.length === 1 ? 'invitado lleva' : 'invitados llevan'} algo.</p></div></div>
-      ${con.length ? `<ul class="por-persona">${con.map(x => `<li><b>${esc(x.p.nombre)}</b><span>${x.cosas.map(l => esc(l.que)).join(', ')}</span></li>`).join('')}</ul>` : '<p class="vacio">Aún no hay asignaciones.</p>'}
-      ${sin.length && con.length ? `<p class="ayuda" style="margin-top:14px">Sin artículo: ${sin.map(x => esc(x.p.nombre)).join(', ')}.</p>` : ''}
-    </section></div></div>`;
-  },
 
   programa() {
     const items = progBorrador || E.datos.programa.map(p => ({hora: p.hora || '', titulo: p.titulo, detalle: p.detalle || ''}));
@@ -675,6 +906,7 @@ const VISTAS_ORG = {
         <form class="agregar" data-form="premio"><div><label for="pPremio">Premio</label><input id="pPremio" maxlength="80" placeholder="Canasta navideña, tarjeta de regalo…"></div><button class="btn prim" type="submit" title="Agregar premio">${ic('mas')}Agregar</button></form>
         <ul class="lista" style="margin-top:18px">${premios.length ? premios.map(p => `<li class="premio" data-id="${p.id}"><span class="ico">${ic(p.ganador ? 'trofeo' : 'boleto')}</span><div style="min-width:0"><b>${esc(p.premio)}</b>${p.ganador ? `<span class="ganador">${esc(p.ganador)}</span>` : '<span class="ayuda" style="margin:0">Sin rifar</span>'}</div><div class="botones" style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ${p.ganador ? 'sec' : 'acen'} chico" data-acc="rifar" title="${p.ganador ? 'Volver a rifar este premio' : 'Sortear el ganador de este premio'}">${ic('sortear', 's')}${p.ganador ? 'Repetir' : 'Rifar'}</button><button class="icono" data-acc="premio-quitar" title="Quitar premio" aria-label="Quitar ${esc(p.premio)}">${ic('basura', 's')}</button></div></li>`).join('') : '<li class="vacio">Agregue los premios para rifarlos el día del convivio.</li>'}</ul>
       </section></div>` : ''}
+      ${c.act.encuestas ? `<div class="columna">${encuestasOrg()}</div>` : ''}
       ${c.act.votos ? `<div class="columna"><section class="panel">
         <div class="titulo-sec"><div><h2>Votaciones</h2><p>Cada invitado vota desde su teléfono. Los resultados se publican al cerrar la votación.</p></div></div>
         <form class="agregar" data-form="votacion"><div><label for="vTitulo">Categoría</label><input id="vTitulo" maxlength="80" placeholder="Mejor atuendo, mejor decoración…"></div><button class="btn prim" type="submit" title="Crear votación">${ic('mas')}Crear</button></form>
@@ -744,13 +976,17 @@ const VISTAS_INV = {
     </div>`;
   },
 
+  comida() { return pila([E.datos.convivio.act.llevar && llevarInv('llevar'), E.datos.convivio.act.menu && menuInv(), E.datos.convivio.act.dieta && dietaInv()]); },
+  equipo() { return pila([E.datos.convivio.act.tareas && llevarInv('tarea'), E.datos.convivio.act.transporte && transporteInv()]); },
+  muro() { return pila([E.datos.convivio.act.mensajes && mensajesHTML(false), E.datos.convivio.act.canciones && cancionesHTML(false)]); },
+
   intercambio() {
     const {convivio: c, yo, amigo, intercambio: ix} = E.datos;
     let principal;
     if (!yo.en_intercambio) {
       principal = `<section class="regalo-zona"><p class="eyebrow">${estrella()} Intercambio</p><h2 style="font-size:2rem;margin:14px 0 10px">No participa en el intercambio</h2><p>${c.sorteado ? 'El sorteo ya se realizó. Para participar, comuníquese con el organizador.' : 'Si desea participar, actívelo antes del sorteo.'}</p></section>`;
     } else if (!amigo) {
-      principal = `<section class="regalo-zona"><p class="eyebrow">${estrella()} Intercambio de regalos</p><div class="escena" aria-hidden="true">${cajaHTML(false)}</div><h2 style="font-size:1.8rem;margin:4px 0 8px">Sorteo pendiente</h2><p>Cuando el organizador realice el sorteo, aquí conocerá su asignación. Mientras tanto, puede preparar su lista de deseos.</p></section>`;
+      principal = `<section class="regalo-zona"><p class="eyebrow">${estrella()} Intercambio de regalos</p><div class="escena" aria-hidden="true">${cajaHTML(false)}</div><h2 style="font-size:1.8rem;margin:4px 0 8px">Sorteo pendiente</h2><p>${c.sorteo_programado ? `El sorteo se realizará automáticamente el ${esc(fechaLarga(c.sorteo_programado, false))}. Mientras tanto, puede preparar su lista de deseos.` : 'Cuando el organizador realice el sorteo, aquí conocerá su asignación. Mientras tanto, puede preparar su lista de deseos.'}</p></section>`;
     } else {
       principal = `<section class="regalo-zona"><p class="eyebrow">${estrella()} Intercambio de regalos</p>
         <div class="escena ${cajaAbierta ? 'abierta' : ''}" id="escena">${cajaHTML(true, amigo.nombre)}</div>
@@ -780,25 +1016,12 @@ const VISTAS_INV = {
     </div>`;
   },
 
-  comida() {
-    const {llevar: ll, yo} = E.datos;
-    const mias = ll.filter(l => l.quienes.some(q => q.id === yo.id));
-    return `<div class="rejilla"><div class="columna"><section class="panel">
-      <div class="titulo-sec"><div><h2>Alimentos y artículos</h2><p>Inscríbase en lo que llevará para coordinar sin repeticiones.</p></div></div>
-      <ul class="cosas">${ll.length ? ll.map(l => { const mia = l.quienes.some(q => q.id === yo.id), llena = l.quienes.length >= l.cuantos; const asignada = l.quienes.some(q => q.id === yo.id && q.asignado); return `<li class="cosa ${llena ? 'completa' : ''} ${mia ? 'mia' : ''}" data-id="${l.id}"><div style="min-width:0"><div class="que">${esc(l.que)}<span class="cupo">${l.quienes.length}/${l.cuantos}</span></div><div class="quienes">${l.quienes.length ? 'A cargo de: ' + l.quienes.map(q => q.id === yo.id ? '<b>usted</b>' : esc(q.nombre)).join(', ') : 'Sin inscritos'}</div></div>${asignada ? `<span class="insignia oro" title="El organizador le asignó este artículo">${ic('llave', 's')}Asignado</span>` : mia ? `<button class="btn sec chico" data-acc="llevar" data-v="0" title="Cancelar su inscripción">Cancelar</button>` : llena ? `<span class="insignia si">${ic('check', 's')}Cubierto</span>` : `<button class="btn prim chico" data-acc="llevar" data-v="1" title="Inscribirse para llevar ${esc(l.que)}">${ic('check', 's')}Me inscribo</button>`}</li>`; }).join('') : '<li class="vacio">El organizador aún no registra artículos. Puede agregar lo que llevará.</li>'}</ul>
-    </section></div>
-    <div class="columna">
-      <section class="panel"><div class="titulo-sec"><div><h2>Agregar un artículo</h2><p>Si lo que llevará no está en la lista, puede agregarlo.</p></div></div>
-        <form class="agregar" data-form="llevar-mio"><div><label for="lMio">Artículo</label><input id="lMio" maxlength="80" placeholder="Postre, hielo, servilletas…"></div><button class="btn prim" type="submit" title="Agregar e inscribirse">${ic('mas')}Agregar</button></form>
-      </section>
-      <section class="panel"><div class="titulo-sec"><h2>Sus artículos</h2></div>${mias.length ? `<ul class="deseos-amigo">${mias.map(l => `<li>${estrella()}<span>${esc(l.que)}${l.quienes.some(q => q.id === yo.id && q.asignado) ? ' <small class="ayuda" style="display:inline">(asignado por el organizador)</small>' : ''}</span></li>`).join('')}</ul>` : '<p class="ayuda" style="margin:0">Aún no tiene inscripciones.</p>'}</section>
-    </div></div>`;
-  },
 
   juegos() {
     const {convivio: c, premios, votaciones, invitados, yo} = E.datos;
     const opciones = invitados.filter(i => i.id !== yo.id);
     return `<div class="rejilla">
+      ${c.act.encuestas ? `<div class="columna">${encuestasInv()}</div>` : ''}
       ${c.act.votos ? `<div class="columna"><section class="panel">
         <div class="titulo-sec"><div><h2>Votaciones</h2><p>Seleccione un nombre para votar. Puede cambiar su voto mientras la votación esté abierta.</p></div></div>
         <div style="display:grid;gap:12px">${votaciones.length ? votaciones.map(v => `<div class="votacion" data-id="${v.id}">
@@ -930,6 +1153,19 @@ const ACC = {
       else { const d = await rpc('admin_ver', {p_codigo: E.codigo}); ir('organizador', {codigo: E.codigo, datos: d, tab: 'invitados'}); }
     });
   },
+  async 'plato-quitar'(b) { const m = E.datos.menu.find(x => x.id === filaId(b)); if (m.total && !await confirmar({titulo: `¿Quitar «${m.plato}»?`, texto: `${m.total} ${m.total === 1 ? 'persona lo eligió' : 'personas lo eligieron'}; su elección quedará pendiente.`, si: 'Quitar', tipo: 'acen'})) return; await conCarga(b, async () => { await rpc('admin_menu_quitar', {p_codigo: E.codigo, p_id: m.id}); await refrescar(true); }); },
+  async 'elegir-plato'(b) { const id = b.dataset.plato, quitar = E.datos.yo.plato_id === id; await conCarga(b, async () => { await rpc('yo_plato', {p_codigo: E.codigo, p_plato: quitar ? null : id}); await refrescar(true); aviso(quitar ? 'Elección retirada' : 'Plato registrado'); }); },
+  'dieta-chip'(b) { const t = $('#dTxt'); if (!t) return; const actual = t.value.split(',').map(x => x.trim()).filter(Boolean); if (!actual.some(x => x.toLowerCase() === b.dataset.d.toLowerCase())) actual.push(b.dataset.d); t.value = actual.join(', ').slice(0, 200); dietaSucio = t.value !== (E.datos.yo.dieta || ''); $('#dEstado').textContent = dietaSucio ? 'Cambios sin guardar' : ''; t.focus(); },
+  async 'encuesta-votar'(b) { const id = filaId(b), op = +b.dataset.op, quitar = (E.datos.mis_encuestas || {})[id] === op; await conCarga(b, async () => { await rpc('yo_encuesta', {p_codigo: E.codigo, p_id: id, p_opcion: quitar ? null : op}); await refrescar(true); aviso(quitar ? 'Respuesta retirada' : 'Respuesta registrada'); }); },
+  async 'encuesta-estado'(b) { const e = E.datos.encuestas.find(x => x.id === filaId(b)); await conCarga(b, async () => { await rpc('admin_encuesta_estado', {p_codigo: E.codigo, p_id: e.id, p_estado: e.estado === 'abierta' ? 'cerrada' : 'abierta'}); await refrescar(true); aviso(e.estado === 'abierta' ? 'Encuesta cerrada' : 'Encuesta reabierta'); }); },
+  async 'encuesta-quitar'(b) { const e = E.datos.encuestas.find(x => x.id === filaId(b)); if (!await confirmar({titulo: `¿Eliminar «${e.pregunta}»?`, texto: `Se eliminarán sus ${e.total} respuestas.`, si: 'Eliminar', tipo: 'acen'})) return; await conCarga(b, async () => { await rpc('admin_encuesta_quitar', {p_codigo: E.codigo, p_id: e.id}); await refrescar(true); }); },
+  async 'viaje-quitar'(b) { const t = E.datos.viajes.find(x => x.id === filaId(b)); if (!await confirmar({titulo: `¿Retirar el vehículo de ${t.conductor}?`, texto: t.pasajeros.length ? `${t.pasajeros.map(p => esc(p.nombre)).join(', ')} perderán su lugar.` : 'Dejará de aparecer en la lista.', si: 'Retirar', tipo: 'acen'})) return; await conCarga(b, async () => { await rpc('admin_viaje_quitar', {p_codigo: E.codigo, p_id: t.id}); await refrescar(true); }); },
+  async 'viaje-unirse'(b) { const id = filaId(b), si = b.dataset.v === '1'; await conCarga(b, async () => { await rpc('yo_viaje_unirse', {p_codigo: E.codigo, p_id: id, p_valor: si}); await refrescar(true); aviso(si ? 'Lugar reservado' : 'Lugar liberado'); }); },
+  async 'viaje-retirar'(b) { const t = E.datos.viajes.find(x => x.conductor_id === E.datos.yo.id); if (t?.pasajeros.length && !await confirmar({titulo: '¿Retirar su vehículo?', texto: `${t.pasajeros.map(p => esc(p.nombre)).join(', ')} perderán su lugar.`, si: 'Retirar', tipo: 'acen'})) return; await conCarga(b, async () => { await rpc('yo_viaje_quitar', {p_codigo: E.codigo}); await refrescar(true); aviso('Su vehículo fue retirado'); }); },
+  async 'cancion-quitar'(b) { const id = filaId(b), org = E.vista === 'organizador'; await conCarga(b, async () => { await rpc(org ? 'admin_cancion_quitar' : 'yo_cancion_quitar', {p_codigo: E.codigo, p_id: id}); await refrescar(true); }); },
+  async 'mensaje-quitar'(b) { const id = filaId(b), org = E.vista === 'organizador'; if (!await confirmar({titulo: '¿Retirar este mensaje?', texto: 'Dejará de aparecer en el muro.', si: 'Retirar', tipo: 'acen'})) return; try { await rpc(org ? 'admin_mensaje_quitar' : 'yo_mensaje_quitar', {p_codigo: E.codigo, p_id: id}); await refrescar(true); aviso('Mensaje retirado'); } catch (e) { aviso(e.message, true); } },
+  'copiar-canciones'() { copiar(E.datos.canciones.map(k => k.cancion).join('\n'), 'Lista de canciones copiada'); },
+  async 'sorteo-cancelar-prog'(b) { await conCarga(b, async () => { await rpc('admin_programar_sorteo', {p_codigo: E.codigo, p_fecha: null}); await refrescar(true); aviso('Programación cancelada'); }); },
   async 'desasignar'(b) {
     const l = E.datos.llevar.find(x => x.id === filaId(b)), q = l.quienes.find(x => x.id === b.dataset.inv);
     await conCarga(b, async () => { await rpc('admin_llevar_asignar', {p_codigo: E.codigo, p_id: l.id, p_invitado: q.id, p_valor: false}); await refrescar(true); aviso(`${q.nombre} ya no lleva «${l.que}»`); });
@@ -1027,6 +1263,12 @@ const ACC = {
   async 'votar'(b) { const vid = filaId(b); await conCarga(b, async () => { await rpc('yo_votar', {p_codigo: E.codigo, p_votacion: vid, p_elegido: b.dataset.el}); await refrescar(true); aviso('Voto registrado'); }); }
 };
 
+async function publicarMensaje(fn, btn) {
+  const t = $('#msjTxt');
+  if (!t.value.trim()) { t.focus(); return; }
+  await conCarga(btn, async () => { await rpc(fn, {p_codigo: E.codigo, p_texto: t.value}); t.value = ''; t.blur(); await refrescar(true); aviso('Mensaje publicado'); });
+}
+
 function leerProg() {
   const filas = [...document.querySelectorAll('.prog-fila')];
   if (!filas.length && progBorrador) return;
@@ -1071,6 +1313,42 @@ const FORMS = {
     const que = $('#lQue').value.trim();
     if (!que) { $('#lQue').focus(); return; }
     await conCarga(btn, async () => { await rpc('admin_llevar_agregar', {p_codigo: E.codigo, p_que: que, p_cuantos: parseInt($('#lCuantos').value) || 1}); await refrescar(true); $('#lQue')?.focus(); });
+  },
+  async tarea(f, btn) {
+    const que = $('#tQue').value.trim();
+    if (!que) { $('#tQue').focus(); return; }
+    await conCarga(btn, async () => { await rpc('admin_llevar_agregar', {p_codigo: E.codigo, p_que: que, p_cuantos: parseInt($('#tCuantos').value) || 1, p_tipo: 'tarea'}); await refrescar(true); $('#tQue')?.focus(); });
+  },
+  async plato(f, btn) {
+    const pl = $('#mPlato').value.trim(), pr = parseFloat($('#mPrecio').value);
+    if (!pl) { $('#mPlato').focus(); return; }
+    await conCarga(btn, async () => { await rpc('admin_menu_agregar', {p_codigo: E.codigo, p_plato: pl, p_precio: isFinite(pr) && pr > 0 ? pr : null}); await refrescar(true); $('#mPlato')?.focus(); });
+  },
+  async dieta(f, btn) {
+    const t = $('#dTxt');
+    await conCarga(btn, async () => { await rpc('yo_dieta', {p_codigo: E.codigo, p_texto: t.value}); dietaSucio = false; t.blur(); await refrescar(true); aviso('Restricciones guardadas'); });
+  },
+  async encuesta(f, btn) {
+    const pr = $('#eTxt').value.trim(), ops = $('#eOps').value.split('\n').map(x => x.trim()).filter(Boolean);
+    if (!pr) { $('#eTxt').focus(); return; }
+    if (ops.length < 2) { aviso('Escriba al menos dos opciones, una por línea', true); $('#eOps').focus(); return; }
+    await conCarga(btn, async () => { await rpc('admin_encuesta_agregar', {p_codigo: E.codigo, p_pregunta: pr, p_opciones: ops}); $('#eTxt').value = ''; $('#eOps').value = ''; $('#eOps').blur(); await refrescar(true); aviso('Encuesta abierta'); });
+  },
+  async viaje(f, btn) {
+    const n = parseInt($('#vLug').value);
+    await conCarga(btn, async () => { await rpc('yo_viaje_ofrecer', {p_codigo: E.codigo, p_lugares: n, p_salida: $('#vSal').value}); document.activeElement?.blur(); await refrescar(true); aviso('Su vehículo quedó registrado'); });
+  },
+  async cancion(f, btn) {
+    const t = $('#kTxt').value.trim();
+    if (!t) { $('#kTxt').focus(); return; }
+    await conCarga(btn, async () => { await rpc('yo_cancion', {p_codigo: E.codigo, p_cancion: t}); await refrescar(true); $('#kTxt')?.focus(); aviso('Canción agregada'); });
+  },
+  async mensaje(f, btn) { await publicarMensaje('yo_mensaje', btn); },
+  async 'mensaje-org'(f, btn) { await publicarMensaje('admin_mensaje', btn); },
+  async programar(f, btn) {
+    const v = $('#sFecha').value;
+    if (!v) { aviso('Elija la fecha y hora del sorteo', true); $('#sFecha').focus(); return; }
+    await conCarga(btn, async () => { await rpc('admin_programar_sorteo', {p_codigo: E.codigo, p_fecha: new Date(v).toISOString()}); document.activeElement?.blur(); await refrescar(true); aviso('Sorteo programado para el ' + fechaLarga(new Date(v).toISOString(), false)); });
   },
   async 'llevar-mio'(f, btn) {
     const que = $('#lMio').value.trim();
@@ -1124,6 +1402,8 @@ app.addEventListener('input', e => {
   if (t.matches('textarea[data-crece]')) { t.style.height = '48px'; t.style.height = Math.min(t.scrollHeight + 2, 200) + 'px'; }
   const k = t.dataset.cambio;
   if (k === 'filtro') { filtroInv = t.value; const pos = t.selectionStart; pintarContenido(); const n = $('#fInv'); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }
+  if (k === 'filtro2') { const f = t.dataset.f; filtros[f] = t.value; const pos = t.selectionStart; pintarContenido(); const n = $('#f2-' + f); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }
+  if (k === 'dieta') { dietaSucio = t.value !== (E.datos.yo.dieta || ''); const e = $('#dEstado'); if (e) e.textContent = dietaSucio ? 'Cambios sin guardar' : ''; }
   if (k === 'deseos') { deseosSucio = t.value !== (E.datos.yo.deseos || ''); $('#yEstado').textContent = deseosSucio ? 'Cambios sin guardar' : ''; }
   if (k === 'prog') { leerProg(); const s = document.querySelector('.estado-guardado'); if (s) s.textContent = 'Cambios sin guardar'; const g = document.querySelector('[data-acc=prog-guardar]'); if (g) { g.disabled = false; g.title = 'Guardar el programa'; } }
   if (k === 'color') { temaElegido = {tema: 'propio', color: t.value}; marcarTema(); }
@@ -1135,6 +1415,7 @@ app.addEventListener('change', async e => {
     const acts = new Set([...document.querySelectorAll('input[name=act]:checked')].map(x => x.value));
     const p = $('#campoPresu'), c = $('#campoCuota'), pl = $('#campoPlato');
     if (pl) pl.hidden = !acts.has('restaurante');
+    const ve = $('#campoVestimenta'); if (ve) ve.hidden = !acts.has('vestimenta_act');
     if (p) p.hidden = !acts.has('intercambio');
     if (c) c.hidden = !acts.has('cuota_act');
     pintarVistaPrevia();
@@ -1150,6 +1431,12 @@ app.addEventListener('change', async e => {
     catch (err) { t.checked = !t.checked; t.disabled = false; aviso(err.message, true); }
   }
   if (k === 'fotos' && t.files?.length) { await subirFotos(t.files); t.value = ''; }
+  if (k === 'plato-de') {
+    const p = E.datos.invitados.find(x => x.id === filaId(t));
+    t.disabled = true;
+    try { await rpc('admin_plato', {p_codigo: E.codigo, p_id: p.id, p_plato: t.value || null}); t.blur(); await refrescar(true); aviso(t.value ? `Plato de ${p.nombre} registrado` : `Elección de ${p.nombre} retirada`); }
+    catch (err) { t.disabled = false; aviso(err.message, true); }
+  }
   if (k === 'asignar' && t.value) {
     const l = E.datos.llevar.find(x => x.id === filaId(t)), p = E.datos.invitados.find(x => x.id === t.value);
     t.disabled = true;
