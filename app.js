@@ -28,7 +28,8 @@ const ACTIVIDADES = [
   {k: 'mensajes', n: 'Mensajes y buenos deseos', d: 'Un muro de mensajes para todo el grupo.', i: 'mensaje'},
   {k: 'canciones', n: 'Canciones sugeridas', d: 'Cada invitado sugiere canciones para la música.', i: 'musica'},
   {k: 'fotos', n: 'Álbum de fotos', d: 'Los invitados comparten sus fotografías.', i: 'camara'},
-  {k: 'vestimenta_act', n: 'Código de vestimenta', d: 'Formal, suéter navideño, todo de blanco…', i: 'camisa'}
+  {k: 'vestimenta_act', n: 'Código de vestimenta', d: 'Formal, suéter navideño, todo de blanco…', i: 'camisa'},
+  {k: 'juegos', n: 'Juegos navideños', d: 'Lotería, sopa de letras, crucigrama y descifra la palabra, desde el teléfono de cada invitado.', i: 'dados'}
 ];
 const TIPOS_LLEVAR = {
   llevar: {titulo: 'Alimentos y artículos', sub: 'Registre lo necesario y asigne a quién le corresponde. Los invitados también pueden inscribirse en lo que quede libre.', subInv: 'Inscríbase en lo que llevará para coordinar sin repeticiones.', form: 'llevar', q: 'lQue', c: 'lCuantos', campo: 'Artículo', ph: 'Bebidas, tamales, vajilla…', uno: 'artículo', plural: 'artículos', algo: 'algo que llevar', vacio: 'Aún no hay artículos registrados.', vacioInv: 'El organizador aún no registra artículos. Puede agregar lo que llevará.', suyos: 'Sus artículos'},
@@ -77,7 +78,12 @@ const I = {
   tareas: '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
   musica: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
   camisa: '<path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/>',
-  plato: '<path d="m16 2-2.3 2.3a3 3 0 0 0 0 4.2l1.8 1.8a3 3 0 0 0 4.2 0L22 8"/><path d="M15 15 3.3 3.3a4.2 4.2 0 0 0 0 6l7.3 7.3c.7.7 2 .7 2.8 0L15 15Zm0 0 7 7"/><path d="m2.1 21.8 6.4-6.3"/><path d="m19 5-7 7"/>'
+  plato: '<path d="m16 2-2.3 2.3a3 3 0 0 0 0 4.2l1.8 1.8a3 3 0 0 0 4.2 0L22 8"/><path d="M15 15 3.3 3.3a4.2 4.2 0 0 0 0 6l7.3 7.3c.7.7 2 .7 2.8 0L15 15Zm0 0 7 7"/><path d="m2.1 21.8 6.4-6.3"/><path d="m19 5-7 7"/>',
+  dados: '<rect width="12" height="12" x="2" y="10" rx="2" ry="2" /><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6" /><path d="M6 18h.01" /><path d="M10 14h.01" /><path d="M15 6h.01" /><path d="M18 9h.01" />',
+  cuadricula: '<rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18" /><path d="M3 15h18" /><path d="M9 3v18" /><path d="M15 3v18" />',
+  revolver: '<path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22" /><path d="m18 2 4 4-4 4" /><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2" /><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8" /><path d="m18 14 4 4-4 4" />',
+  rompecabezas: '<path d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z" />',
+  brillo: '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" /><path d="M20 3v4" /><path d="M22 5h-4" /><path d="M4 17v2" /><path d="M5 18H3" />'
 };
 const ESTRELLA = '<path d="M12 1.5 13.9 10.1 22.5 12 13.9 13.9 12 22.5 10.1 13.9 1.5 12 10.1 10.1Z"/>';
 const ic = (n, c = '') => `<svg class="svg ${c}" viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
@@ -283,6 +289,7 @@ function ir(vista, extra = {}) {
   if (vista === 'organizador') { pintarPanel(); relojes.push(setInterval(() => { if (!document.hidden) refrescar(); }, 20000)); }
   if (vista === 'invitado') { pintarPanel(); relojes.push(setInterval(() => { if (!document.hidden) refrescar(); }, 25000)); }
   if (vista === 'organizador' || vista === 'invitado') relojes.push(setInterval(pintarCuenta, 30000));
+  if (vista === 'organizador' || vista === 'invitado') relojes.push(setInterval(() => { if (!document.hidden && E.tab === 'jugar') refrescarJuego(); }, 3000));
   pintarSesion();
   window.scrollTo(0, 0);
 }
@@ -449,6 +456,7 @@ function pestanasDe() {
       tabEquipo(a) && ['equipo', tabEquipo(a)[0], tabEquipo(a)[1]],
       a.programa && ['programa', 'reloj', 'Programa'],
       tabJuegos(a) && ['juegos', tabJuegos(a)[0], tabJuegos(a)[1]],
+      a.juegos && ['jugar', 'dados', 'Juegos navideños'],
       tabMuro(a) && ['muro', tabMuro(a)[0], tabMuro(a)[1]],
       a.fotos && ['fotos', 'camara', 'Fotografías', E.datos.fotos.length],
       ['ajustes', 'ajustes', 'Ajustes']
@@ -460,6 +468,7 @@ function pestanasDe() {
     tabComida(a) && ['comida', tabComida(a)[0], tabComida(a)[1]],
     tabEquipo(a) && ['equipo', tabEquipo(a)[0], tabEquipo(a)[1]],
     tabJuegos(a) && ['juegos', tabJuegos(a)[0], tabJuegos(a)[1]],
+    a.juegos && ['jugar', 'dados', 'Juegos navideños'],
     tabMuro(a) && ['muro', tabMuro(a)[0], tabMuro(a)[1]],
     a.fotos && ['fotos', 'camara', 'Fotografías', E.datos.fotos.length]
   ].filter(Boolean);

@@ -183,11 +183,34 @@ create table if not exists public.mensajes (
 );
 create index if not exists mensajes_convivio on public.mensajes (convivio_id, creado_en desc);
 alter table public.llevar_apuntes add column if not exists asignado boolean not null default false;
+alter table public.convivios add column if not exists act_juegos boolean not null default false;
+
+create table if not exists public.partidas (
+  id uuid primary key default gen_random_uuid(),
+  convivio_id uuid not null references public.convivios(id) on delete cascade,
+  juego text not null check (juego in ('loteria', 'sopa', 'crucigrama', 'descifra')),
+  modo text not null default 'linea' check (modo in ('linea', 'llena')),
+  semilla int not null,
+  estado text not null default 'abierta' check (estado in ('abierta', 'terminada')),
+  cartas int[] not null default '{}',
+  ganador_id uuid references public.invitados(id) on delete set null,
+  iniciada_en timestamptz not null default now(),
+  terminada_en timestamptz
+);
+create index if not exists partidas_convivio on public.partidas (convivio_id, iniciada_en desc);
+
+create table if not exists public.partida_jugadores (
+  partida_id uuid not null references public.partidas(id) on delete cascade,
+  invitado_id uuid not null references public.invitados(id) on delete cascade,
+  tablero int[],
+  terminado_en timestamptz,
+  primary key (partida_id, invitado_id)
+);
 
 do $$
 declare t text;
 begin
-  foreach t in array array['convivios', 'invitados', 'llevar', 'llevar_apuntes', 'programa', 'premios', 'votaciones', 'votos', 'fotos', 'menu', 'encuestas', 'encuesta_votos', 'viajes', 'viaje_pasajeros', 'canciones', 'mensajes'] loop
+  foreach t in array array['convivios', 'invitados', 'llevar', 'llevar_apuntes', 'programa', 'premios', 'votaciones', 'votos', 'fotos', 'menu', 'encuestas', 'encuesta_votos', 'viajes', 'viaje_pasajeros', 'canciones', 'mensajes', 'partidas', 'partida_jugadores'] loop
     execute format('alter table public.%I enable row level security', t);
     execute format('revoke all on table public.%I from anon, authenticated', t);
   end loop;
@@ -317,7 +340,7 @@ as $$
       'cuota', v.act_cuota, 'programa', v.act_programa, 'rifa', v.act_rifa, 'votos', v.act_votos, 'fotos', v.act_fotos,
       'restaurante', v.act_restaurante, 'encuestas', v.act_encuestas, 'menu', v.act_menu, 'tareas', v.act_tareas,
       'transporte', v.act_transporte, 'canciones', v.act_canciones, 'mensajes', v.act_mensajes, 'dieta', v.act_dieta,
-      'vestimenta', v.act_vestimenta
+      'vestimenta', v.act_vestimenta, 'juegos', v.act_juegos
     )
   )
 $$;
@@ -433,6 +456,7 @@ begin
     act_mensajes = coalesce((d->>'mensajes')::boolean, act_mensajes),
     act_dieta = coalesce((d->>'dieta')::boolean, act_dieta),
     act_vestimenta = coalesce((d->>'vestimenta_act')::boolean, act_vestimenta),
+    act_juegos = coalesce((d->>'juegos')::boolean, act_juegos),
     vestimenta = case when d ? 'vestimenta' then left(ir_limpio(d->>'vestimenta'), 80) else vestimenta end,
     precio_plato = case when d ? 'precio_plato' then nullif(nullif(d->>'precio_plato', '')::numeric, 0) else precio_plato end,
     presupuesto = coalesce(nullif(d->>'presupuesto', '')::numeric, presupuesto),
@@ -495,6 +519,7 @@ begin
       ) order by lower(i.nombre))
       from public.invitados i where i.convivio_id = v.id
     ), '[]'::json),
+    'partida', case when v.act_juegos then cv_partida(v.id, (select i.id from public.invitados i where i.codigo = c and i.convivio_id = v.id)) end,
     'votaciones', coalesce((
       select json_agg(json_build_object(
         'id', t.id, 'titulo', t.titulo, 'estado', t.estado,
@@ -1033,6 +1058,7 @@ begin
       'es_organizador', yo.es_organizador, 'dieta', yo.dieta, 'plato_id', yo.plato_id
     ),
     'mis_encuestas', coalesce((select json_object_agg(x.encuesta_id, x.opcion) from public.encuesta_votos x where x.invitado_id = yo.id), '{}'::json),
+    'partida', case when v.act_juegos then cv_partida(v.id, yo.id) end,
     'amigo', case when amigo.id is null then null else json_build_object('nombre', amigo.nombre, 'deseos', amigo.deseos) end,
     'invitados', coalesce((select json_agg(json_build_object('id', i.id, 'nombre', i.nombre, 'asistencia', i.asistencia, 'acompanantes', i.acompanantes) order by lower(i.nombre)) from public.invitados i where i.convivio_id = v.id), '[]'::json),
     'intercambio', json_build_object(
@@ -1644,15 +1670,245 @@ begin
 end
 $$;
 
+create or replace function public.cv_tablero(p_partida uuid, p_invitado uuid)
+returns int[]
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  t int[];
+begin
+  select tablero into t from public.partida_jugadores where partida_id = p_partida and invitado_id = p_invitado;
+  if t is null then
+    select array_agg(n) into t from (select n from generate_series(1, 36) n order by random() limit 16) x;
+    insert into public.partida_jugadores (partida_id, invitado_id, tablero) values (p_partida, p_invitado, t)
+    on conflict (partida_id, invitado_id) do update set tablero = coalesce(public.partida_jugadores.tablero, excluded.tablero)
+    returning tablero into t;
+  end if;
+  return t;
+end
+$$;
+
+create or replace function public.cv_partida(p_convivio uuid, p_invitado uuid)
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  p public.partidas;
+  t int[];
+  mio timestamptz;
+begin
+  select * into p from public.partidas where convivio_id = p_convivio order by iniciada_en desc limit 1;
+  if not found then
+    return null;
+  end if;
+  if p_invitado is not null then
+    if p.juego = 'loteria' and p.estado = 'abierta' then
+      t := cv_tablero(p.id, p_invitado);
+    else
+      select tablero into t from public.partida_jugadores where partida_id = p.id and invitado_id = p_invitado;
+    end if;
+    select terminado_en into mio from public.partida_jugadores where partida_id = p.id and invitado_id = p_invitado;
+  end if;
+  return json_build_object(
+    'id', p.id, 'juego', p.juego, 'modo', p.modo, 'semilla', p.semilla, 'estado', p.estado,
+    'cartas', p.cartas, 'iniciada_en', p.iniciada_en, 'terminada_en', p.terminada_en,
+    'ganador', (select nombre from public.invitados where id = p.ganador_id),
+    'gane', p_invitado is not null and p.ganador_id is not distinct from p_invitado,
+    'juego_yo', p_invitado is not null,
+    'tablero', t,
+    'termine', mio is not null,
+    'resultados', coalesce((
+      select json_agg(json_build_object('nombre', i.nombre, 'segundos', greatest(1, extract(epoch from j.terminado_en - p.iniciada_en)::int)) order by j.terminado_en)
+      from public.partida_jugadores j join public.invitados i on i.id = j.invitado_id
+      where j.partida_id = p.id and j.terminado_en is not null
+    ), '[]'::json)
+  );
+end
+$$;
+
+create or replace function public.juego_ver(p_codigo text)
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  c text := upper(regexp_replace(coalesce(p_codigo, ''), '[^A-Za-z0-9]', '', 'g'));
+  v public.convivios;
+  yo uuid;
+  conv uuid;
+begin
+  select id, convivio_id into yo, conv from public.invitados where codigo = c;
+  if conv is null then
+    select id into conv from public.convivios where codigo_admin = c;
+  end if;
+  if conv is null then
+    raise exception 'No se encontró ese código. Verifíquelo e intente de nuevo.' using errcode = 'P0001';
+  end if;
+  select * into v from public.convivios where id = conv;
+  if not v.act_juegos then
+    return null;
+  end if;
+  return cv_partida(v.id, yo);
+end
+$$;
+
+create or replace function public.admin_juego_iniciar(p_codigo text, p_juego text, p_modo text default 'linea')
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v public.convivios := cv_admin(p_codigo);
+  nueva uuid;
+begin
+  if not v.act_juegos then
+    raise exception 'Active primero los juegos navideños en Ajustes' using errcode = 'P0001';
+  end if;
+  if p_juego is null or p_juego not in ('loteria', 'sopa', 'crucigrama', 'descifra') then
+    raise exception 'Juego no válido' using errcode = 'P0001';
+  end if;
+  update public.partidas set estado = 'terminada', terminada_en = now() where convivio_id = v.id and estado = 'abierta';
+  insert into public.partidas (convivio_id, juego, modo, semilla)
+  values (v.id, p_juego, case when p_modo = 'llena' then 'llena' else 'linea' end, 1 + floor(random() * 2147483000)::int)
+  returning id into nueva;
+  if p_juego = 'loteria' then
+    perform cv_tablero(nueva, i.id) from public.invitados i where i.convivio_id = v.id;
+  end if;
+end
+$$;
+
+create or replace function public.admin_juego_terminar(p_codigo text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v public.convivios := cv_admin(p_codigo);
+begin
+  update public.partidas set estado = 'terminada', terminada_en = now() where convivio_id = v.id and estado = 'abierta';
+end
+$$;
+
+create or replace function public.admin_loteria_cantar(p_codigo text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v public.convivios := cv_admin(p_codigo);
+  p public.partidas;
+  n int;
+begin
+  select * into p from public.partidas where convivio_id = v.id and estado = 'abierta' and juego = 'loteria' order by iniciada_en desc limit 1 for update;
+  if not found then
+    raise exception 'No hay una lotería en curso' using errcode = 'P0001';
+  end if;
+  select x into n from generate_series(1, 36) x where not (x = any(p.cartas)) order by random() limit 1;
+  if n is null then
+    raise exception 'Ya se cantaron todas las cartas' using errcode = 'P0001';
+  end if;
+  update public.partidas set cartas = cartas || n where id = p.id;
+end
+$$;
+
+create or replace function public.cv_loteria_completa(t int[], cartas int[], modo text)
+returns boolean
+language plpgsql
+immutable
+set search_path = public
+as $$
+declare
+  i int;
+begin
+  if t is null or array_length(t, 1) <> 16 then
+    return false;
+  end if;
+  if modo = 'llena' then
+    return t <@ cartas;
+  end if;
+  for i in 0..3 loop
+    if t[i * 4 + 1:i * 4 + 4] <@ cartas or array[t[i + 1], t[i + 5], t[i + 9], t[i + 13]] <@ cartas then
+      return true;
+    end if;
+  end loop;
+  return array[t[1], t[6], t[11], t[16]] <@ cartas or array[t[4], t[7], t[10], t[13]] <@ cartas;
+end
+$$;
+
+create or replace function public.yo_loteria(p_codigo text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  yo public.invitados := cv_yo(p_codigo);
+  p public.partidas;
+begin
+  select * into p from public.partidas where convivio_id = yo.convivio_id and juego = 'loteria' order by iniciada_en desc limit 1 for update;
+  if not found then
+    raise exception 'No hay una lotería en curso' using errcode = 'P0001';
+  end if;
+  if p.estado <> 'abierta' then
+    if p.ganador_id is not null then
+      raise exception 'Esta lotería ya la ganó %', (select nombre from public.invitados where id = p.ganador_id) using errcode = 'P0001';
+    end if;
+    raise exception 'Esta lotería ya terminó' using errcode = 'P0001';
+  end if;
+  if not cv_loteria_completa(cv_tablero(p.id, yo.id), p.cartas, p.modo) then
+    raise exception '%', case when p.modo = 'llena' then 'Todavía no han salido todas las cartas de su tablero' else 'Su tablero todavía no tiene una línea completa con cartas que ya salieron' end using errcode = 'P0001';
+  end if;
+  update public.partidas set ganador_id = yo.id, estado = 'terminada', terminada_en = now() where id = p.id;
+end
+$$;
+
+create or replace function public.yo_juego_listo(p_codigo text, p_partida uuid)
+returns int
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  yo public.invitados := cv_yo(p_codigo);
+  p public.partidas;
+  puesto int;
+begin
+  select * into p from public.partidas where id = p_partida and convivio_id = yo.convivio_id for update;
+  if not found or p.juego = 'loteria' then
+    raise exception 'Juego no válido' using errcode = 'P0001';
+  end if;
+  if p.estado <> 'abierta' then
+    raise exception 'Este juego ya terminó' using errcode = 'P0001';
+  end if;
+  insert into public.partida_jugadores (partida_id, invitado_id, terminado_en) values (p.id, yo.id, now())
+  on conflict (partida_id, invitado_id) do update set terminado_en = coalesce(public.partida_jugadores.terminado_en, excluded.terminado_en);
+  if p.ganador_id is null then
+    update public.partidas set ganador_id = yo.id where id = p.id;
+  end if;
+  select count(*) into puesto from public.partida_jugadores j
+  where j.partida_id = p.id and j.terminado_en is not null
+    and j.terminado_en <= (select x.terminado_en from public.partida_jugadores x where x.partida_id = p.id and x.invitado_id = yo.id);
+  return puesto;
+end
+$$;
+
 do $$
 declare
   f record;
-  publicas text[] := array['entrar', 'crear_convivio', 'cv_existe'];
+  publicas text[] := array['entrar', 'crear_convivio', 'cv_existe', 'juego_ver'];
 begin
   for f in
     select p.oid::regprocedure as firma, p.proname
     from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-    where n.nspname = 'public' and (p.proname like 'admin\_%' or p.proname like 'yo\_%' or p.proname like 'cv\_%' or p.proname like 'ir\_%' or p.proname in ('entrar', 'crear_convivio'))
+    where n.nspname = 'public' and (p.proname like 'admin\_%' or p.proname like 'yo\_%' or p.proname like 'cv\_%' or p.proname like 'ir\_%' or p.proname in ('entrar', 'crear_convivio', 'juego_ver'))
   loop
     execute format('revoke all on function %s from public, anon, authenticated', f.firma);
     if f.proname like 'admin\_%' or f.proname like 'yo\_%' or f.proname = any(publicas) then
